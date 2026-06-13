@@ -63,6 +63,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MainScreen
   _canvasGroup: {fileID: 7996124450759814702}
+  _gameStartButton: {fileID: 4710705848304647855}
 --- !u!1 &7412906749849482158
 GameObject:
   m_ObjectHideFlags: 0

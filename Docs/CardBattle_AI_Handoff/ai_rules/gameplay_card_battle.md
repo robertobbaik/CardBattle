@@ -51,7 +51,7 @@ Enemy turn:
 - Deals damage equal to its current HP to the selected enemy card.
 - Does not receive counter damage.
 
-### Musou
+### Peerless
 
 - Deals damage equal to 100% of current HP to the selected enemy card.
 - Additionally deals 50% of current HP to one random enemy card adjacent to the selected target.
@@ -81,7 +81,7 @@ MVP AI:
 Improved AI, if time allows:
 
 - Prioritize targets that can be killed.
-- Prefer Musou targets with adjacent enemies.
+- Prefer Peerless targets with adjacent enemies.
 - Avoid suicidal Normal attacks when a safer Ranged card is available.
 
 ## Balance Rule

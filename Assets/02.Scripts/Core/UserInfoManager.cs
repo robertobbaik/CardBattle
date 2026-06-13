@@ -1,8 +1,13 @@
 using UnityEngine;
+using System.Collections.Generic;
 
-public sealed class UserInfoManager : MonoBehaviour
+public class UserInfoManager : MonoBehaviour
 {
     public static UserInfoManager Instance { get; private set; }
+
+    [SerializeField] private List<int> _dec = new List<int>();
+
+    public List<int> Dec => _dec;
 
     private void Awake()
     {

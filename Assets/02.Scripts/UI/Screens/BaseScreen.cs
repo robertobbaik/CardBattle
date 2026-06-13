@@ -4,7 +4,7 @@ public abstract class BaseScreen : MonoBehaviour
 {
     [SerializeField] private CanvasGroup _canvasGroup;
 
-    public bool IsVisible => _canvasGroup != null && _canvasGroup.alpha > 0f;
+    public bool IsVisible => _canvasGroup.alpha > 0f;
 
     public virtual void Show()
     {
@@ -18,12 +18,6 @@ public abstract class BaseScreen : MonoBehaviour
 
     protected void SetVisible(float alpha, bool canInteract)
     {
-        if (_canvasGroup == null)
-        {
-            Debug.LogError($"{nameof(CanvasGroup)} is missing on {name}.");
-            return;
-        }
-
         _canvasGroup.alpha = alpha;
         _canvasGroup.interactable = canInteract;
         _canvasGroup.blocksRaycasts = canInteract;

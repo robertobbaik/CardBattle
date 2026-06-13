@@ -7,6 +7,7 @@
 - Keep classes focused on one responsibility.
 - Avoid unnecessary abstraction before the core gameplay is stable.
 - Do not write large methods that mix UI, data, and battle logic.
+- When declaring namespaces with `using`, always place additional `using` statements below `using UnityEngine;`.
 
 ## Naming
 

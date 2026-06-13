@@ -1,0 +1,14 @@
+public class NormalCard : BaseCard
+{
+    public override CardType CardType => CardType.Normal;
+
+    public override void Attack(BaseCard target)
+    {
+        target.TakeDamage(AttackPower);
+    }
+
+    public override void Destroy()
+    {
+        UnityEngine.Object.Destroy(gameObject);
+    }
+}

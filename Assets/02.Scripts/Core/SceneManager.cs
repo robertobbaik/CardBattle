@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public sealed class SceneManager : MonoBehaviour
+public class SceneManager : MonoBehaviour
 {
     public static SceneManager Instance { get; private set; }
 

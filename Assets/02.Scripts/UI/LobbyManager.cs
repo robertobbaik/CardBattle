@@ -1,10 +1,12 @@
-using AYellowpaper.SerializedCollections;
 using UnityEngine;
 using UnityEngine.UI;
+using AYellowpaper.SerializedCollections;
 
-public sealed class LobbyManager : MonoBehaviour
+public class LobbyManager : MonoBehaviour
 {
     public static LobbyManager Instance { get; private set; }
+
+    private bool _isInitialized;
 
     [SerializeField]
     [SerializedDictionary("Screen Type", "Screen")]
@@ -23,6 +25,7 @@ public sealed class LobbyManager : MonoBehaviour
         }
 
         Instance = this;
+        Initialize();
     }
 
     private void OnDestroy()
@@ -33,20 +36,28 @@ public sealed class LobbyManager : MonoBehaviour
         }
     }
 
-    public void OnClickScreen(LobbyScreenType screenType)
+    public void Initialize()
     {
-        if (_screens == null)
+        if (_isInitialized)
         {
             return;
         }
 
+        foreach (var screenButton in _screenButtons)
+        {
+            LobbyScreenType screenType = screenButton.Key;
+            Button button = screenButton.Value;
+
+            button.onClick.AddListener(() => OnClickScreen(screenType));
+        }
+
+        _isInitialized = true;
+    }
+
+    public void OnClickScreen(LobbyScreenType screenType)
+    {
         foreach (var screen in _screens)
         {
-            if (screen.Value == null)
-            {
-                continue;
-            }
-
             if (screen.Key == screenType)
             {
                 screen.Value.Show();

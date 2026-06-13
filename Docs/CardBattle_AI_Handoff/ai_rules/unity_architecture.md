@@ -56,7 +56,7 @@ Responsible for card effect execution.
 
 - Normal attack
 - Ranged attack
-- Musou attack
+- Peerless attack
 - Healer passive
 - Future card effects
 

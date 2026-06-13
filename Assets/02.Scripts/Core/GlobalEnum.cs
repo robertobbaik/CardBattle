@@ -12,3 +12,17 @@ public enum LobbyScreenType
     Inventory,
     Collection
 }
+
+public enum CardType
+{
+    Normal = 1,
+    Ranged = 2,
+    Peerless = 3,
+    Healer = 4,
+    Guardian = 5,
+    Assassin = 6,
+    Berserker = 7,
+    Shaman = 8,
+    Commander = 9,
+    Bomber = 10
+}

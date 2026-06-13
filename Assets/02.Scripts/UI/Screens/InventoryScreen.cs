@@ -1,3 +1,3 @@
-public sealed class InventoryScreen : BaseScreen
+public class InventoryScreen : BaseScreen
 {
 }

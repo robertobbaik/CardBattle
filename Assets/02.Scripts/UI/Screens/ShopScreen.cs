@@ -1,3 +1,3 @@
-public sealed class ShopScreen : BaseScreen
+public class ShopScreen : BaseScreen
 {
 }
