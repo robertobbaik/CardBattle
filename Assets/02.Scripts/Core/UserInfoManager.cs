@@ -3,11 +3,14 @@ using System.Collections.Generic;
 
 public class UserInfoManager : MonoBehaviour
 {
+    private const string CurrentDecKey = "CurrentDec";
+
     public static UserInfoManager Instance { get; private set; }
 
-    [SerializeField] private List<int> _dec = new List<int>();
+    [SerializeField] private List<int> _currentDec = new List<int>();
 
-    public List<int> Dec => _dec;
+    public List<int> CurrentDec => _currentDec;
+    public List<int> Dec => _currentDec;
 
     private void Awake()
     {
@@ -19,5 +22,25 @@ public class UserInfoManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        LoadCurrentDec();
+    }
+
+    private void LoadCurrentDec()
+    {
+        string currentDecJson = PlayerPrefs.GetString(CurrentDecKey);
+
+        if (string.IsNullOrEmpty(currentDecJson))
+        {
+            _currentDec = new List<int> { 1, 2, 3, 4, 5, 6 };
+            return;
+        }
+
+        CurrentDecData currentDecData = JsonUtility.FromJson<CurrentDecData>(currentDecJson);
+        _currentDec = currentDecData.cardIds;
+    }
+
+    private class CurrentDecData
+    {
+        public List<int> cardIds = new List<int>();
     }
 }

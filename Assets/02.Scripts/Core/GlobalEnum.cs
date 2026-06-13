@@ -26,3 +26,10 @@ public enum CardType
     Commander = 9,
     Bomber = 10
 }
+
+public enum TurnOwner
+{
+    None,
+    Player,
+    Enemy
+}
