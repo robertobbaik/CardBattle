@@ -1,8 +1,9 @@
 public enum SceneType
 {
-    Loading = 0,
-    Lobby = 1,
-    Game = 2
+    LoadingScene = 0,
+    LobbyScene = 1,
+    GameLoading = 2,
+    GameScene = 3
 }
 
 public enum LobbyScreenType
@@ -32,4 +33,13 @@ public enum TurnOwner
     None,
     Player,
     Enemy
+}
+
+public enum EnemyState
+{
+    None,
+    Idle,
+    Think,
+    Act,
+    End
 }

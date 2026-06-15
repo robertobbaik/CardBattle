@@ -27,6 +27,6 @@ public class MainScreen : BaseScreen
         _isGameStartRequested = true;
         _gameStartButton.interactable = false;
 
-        SceneManager.Instance.LoadScene(SceneType.Game);
+        SceneManager.Instance.LoadScene(SceneType.GameScene);
     }
 }

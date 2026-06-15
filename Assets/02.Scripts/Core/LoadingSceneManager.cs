@@ -9,6 +9,6 @@ public class LoadingSceneManager : MonoBehaviour
     {
         yield return new WaitForSeconds(_lobbyLoadDelay);
 
-        SceneManager.Instance.LoadScene(SceneType.Lobby);
+        SceneManager.Instance.LoadScene(SceneType.LobbyScene);
     }
 }

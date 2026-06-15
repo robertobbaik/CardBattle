@@ -17,6 +17,7 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        PlayerController.Instance.Initialize();
         TurnManager.Instance.Initialize();
         TurnManager.Instance.StartPlayerTurn();
     }

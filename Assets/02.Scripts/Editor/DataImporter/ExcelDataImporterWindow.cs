@@ -93,8 +93,13 @@ public class ExcelDataImporterWindow : EditorWindow
 
     private List<SheetData> ReadSheets(Type factoryType)
     {
-        MethodInfo createReader = FindCreateReader(factoryType);
         List<SheetData> sheets = new List<SheetData>();
+        MethodInfo createReader = FindCreateReader(factoryType);
+        if (createReader == null)
+        {
+            Debug.LogError("ExcelDataReader.ExcelReaderFactory.CreateReader(Stream) was not found.");
+            return sheets;
+        }
 
         using FileStream stream = File.Open(_excelPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         using IDisposable reader = (IDisposable)createReader.Invoke(null, new object[] { stream });
@@ -124,7 +129,8 @@ public class ExcelDataImporterWindow : EditorWindow
                 rows.Add(TrimTrailingEmpty(row));
             }
 
-            if (TryCreateSheetData(sheetName, rows, out SheetData sheetData))
+            SheetData sheetData = CreateSheetData(sheetName, rows);
+            if (sheetData != null)
             {
                 sheets.Add(sheetData);
             }
@@ -134,32 +140,29 @@ public class ExcelDataImporterWindow : EditorWindow
         return sheets;
     }
 
-    private static bool TryCreateSheetData(string sheetName, List<List<object>> rows, out SheetData sheetData)
+    private static SheetData CreateSheetData(string sheetName, List<List<object>> rows)
     {
-        sheetData = null;
-
         if (rows.Count < 3 || rows[0].Count == 0 || rows[1].Count == 0)
         {
-            return false;
+            return null;
         }
 
         List<string> fields = ToStringRow(rows[0]);
         List<string> types = ToStringRow(rows[1]);
         if (fields.Count != types.Count)
         {
-            return false;
+            return null;
         }
 
         foreach (string type in types)
         {
             if (!IsSupportedType(type))
             {
-                return false;
+                return null;
             }
         }
 
-        sheetData = new SheetData(sheetName, fields, types, rows);
-        return true;
+        return new SheetData(sheetName, fields, types, rows, CreateFieldGroups(fields, types));
     }
 
     private static MethodInfo FindCreateReader(Type factoryType)
@@ -173,7 +176,7 @@ public class ExcelDataImporterWindow : EditorWindow
             }
         }
 
-        throw new MissingMethodException("ExcelDataReader.ExcelReaderFactory.CreateReader(Stream) was not found.");
+        return null;
     }
 
     private static List<object> TrimTrailingEmpty(List<object> row)
@@ -216,9 +219,15 @@ public class ExcelDataImporterWindow : EditorWindow
             builder.AppendLine($"public class {className}");
             builder.AppendLine("{");
 
-            for (int i = 0; i < sheet.Fields.Count; i++)
+            foreach (FieldGroup fieldGroup in sheet.FieldGroups)
             {
-                builder.AppendLine($"    public {MapType(sheet.Types[i])} {SanitizeFieldName(sheet.Fields[i])};");
+                string fieldType = MapType(fieldGroup.Type);
+                if (fieldGroup.IsList)
+                {
+                    fieldType = $"List<{fieldType}>";
+                }
+
+                builder.AppendLine($"    public {fieldType} {fieldGroup.Name};");
             }
 
             builder.AppendLine();
@@ -239,6 +248,26 @@ public class ExcelDataImporterWindow : EditorWindow
             builder.AppendLine("            return dataById;");
             builder.AppendLine("        }");
             builder.AppendLine("    }");
+
+            if (className == "CardTextData")
+            {
+                builder.AppendLine();
+                builder.AppendLine("    public string GetName(string languageCode)");
+                builder.AppendLine("    {");
+                builder.AppendLine("        return NormalizeLanguageCode(languageCode) == \"ko\" ? koreanName : englishName;");
+                builder.AppendLine("    }");
+                builder.AppendLine();
+                builder.AppendLine("    public string GetDescription(string languageCode)");
+                builder.AppendLine("    {");
+                builder.AppendLine("        return NormalizeLanguageCode(languageCode) == \"ko\" ? koreanDescription : englishDescription;");
+                builder.AppendLine("    }");
+                builder.AppendLine();
+                builder.AppendLine("    private static string NormalizeLanguageCode(string languageCode)");
+                builder.AppendLine("    {");
+                builder.AppendLine("        return string.Equals(languageCode, \"ko\", StringComparison.OrdinalIgnoreCase) ? \"ko\" : \"en\";");
+                builder.AppendLine("    }");
+            }
+
             builder.AppendLine("}");
             builder.AppendLine();
         }
@@ -248,16 +277,15 @@ public class ExcelDataImporterWindow : EditorWindow
 
     private static string GetKeyFieldName(SheetData sheet)
     {
-        for (int i = 0; i < sheet.Fields.Count; i++)
+        foreach (FieldGroup fieldGroup in sheet.FieldGroups)
         {
-            string fieldName = SanitizeFieldName(sheet.Fields[i]);
-            if (MapType(sheet.Types[i]) == "int" && fieldName.EndsWith("Id", StringComparison.Ordinal))
+            if (!fieldGroup.IsList && MapType(fieldGroup.Type) == "int" && fieldGroup.Name.EndsWith("Id", StringComparison.Ordinal))
             {
-                return fieldName;
+                return fieldGroup.Name;
             }
         }
 
-        return SanitizeFieldName(sheet.Fields[0]);
+        return sheet.FieldGroups[0].Name;
     }
 
     private static string GenerateJson(SheetData sheet)
@@ -271,11 +299,20 @@ public class ExcelDataImporterWindow : EditorWindow
             List<object> row = sheet.Rows[rowIndex];
             builder.AppendLine("    {");
 
-            for (int columnIndex = 0; columnIndex < sheet.Fields.Count; columnIndex++)
+            for (int fieldIndex = 0; fieldIndex < sheet.FieldGroups.Count; fieldIndex++)
             {
+                FieldGroup fieldGroup = sheet.FieldGroups[fieldIndex];
+                string comma = fieldIndex == sheet.FieldGroups.Count - 1 ? string.Empty : ",";
+
+                if (fieldGroup.IsList)
+                {
+                    builder.AppendLine($"      \"{fieldGroup.Name}\": {FormatJsonList(row, fieldGroup)}{comma}");
+                    continue;
+                }
+
+                int columnIndex = fieldGroup.ColumnIndexes[0];
                 object value = columnIndex < row.Count ? row[columnIndex] : null;
-                string comma = columnIndex == sheet.Fields.Count - 1 ? string.Empty : ",";
-                builder.AppendLine($"      \"{SanitizeFieldName(sheet.Fields[columnIndex])}\": {FormatJsonValue(value, sheet.Types[columnIndex])}{comma}");
+                builder.AppendLine($"      \"{fieldGroup.Name}\": {FormatJsonValue(value, fieldGroup.Type)}{comma}");
             }
 
             string rowComma = rowIndex == sheet.Rows.Count - 1 ? string.Empty : ",";
@@ -286,6 +323,40 @@ public class ExcelDataImporterWindow : EditorWindow
         builder.AppendLine("}");
 
         return builder.ToString();
+    }
+
+    private static List<FieldGroup> CreateFieldGroups(List<string> fields, List<string> types)
+    {
+        List<FieldGroup> fieldGroups = new List<FieldGroup>();
+
+        for (int i = 0; i < fields.Count; i++)
+        {
+            string fieldName = SanitizeFieldName(fields[i]);
+            FieldGroup fieldGroup = FindFieldGroup(fieldGroups, fieldName);
+
+            if (fieldGroup == null)
+            {
+                fieldGroups.Add(new FieldGroup(fieldName, types[i], i));
+                continue;
+            }
+
+            fieldGroup.AddColumn(types[i], i);
+        }
+
+        return fieldGroups;
+    }
+
+    private static FieldGroup FindFieldGroup(List<FieldGroup> fieldGroups, string fieldName)
+    {
+        foreach (FieldGroup fieldGroup in fieldGroups)
+        {
+            if (fieldGroup.Name == fieldName)
+            {
+                return fieldGroup;
+            }
+        }
+
+        return null;
     }
 
     private static bool IsSupportedType(string excelType)
@@ -317,6 +388,28 @@ public class ExcelDataImporterWindow : EditorWindow
             "bool" => string.IsNullOrWhiteSpace(text) ? "false" : Convert.ToBoolean(value, CultureInfo.InvariantCulture).ToString().ToLowerInvariant(),
             _ => $"\"{EscapeJson(text)}\""
         };
+    }
+
+    private static string FormatJsonList(List<object> row, FieldGroup fieldGroup)
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.Append("[");
+
+        for (int i = 0; i < fieldGroup.ColumnIndexes.Count; i++)
+        {
+            int columnIndex = fieldGroup.ColumnIndexes[i];
+            object value = columnIndex < row.Count ? row[columnIndex] : null;
+
+            if (i > 0)
+            {
+                builder.Append(", ");
+            }
+
+            builder.Append(FormatJsonValue(value, fieldGroup.Type));
+        }
+
+        builder.Append("]");
+        return builder.ToString();
     }
 
     private static string SanitizeIdentifier(string value)
@@ -369,17 +462,39 @@ public class ExcelDataImporterWindow : EditorWindow
 
     private class SheetData
     {
-        public SheetData(string sheetName, List<string> fields, List<string> types, List<List<object>> rows)
+        public SheetData(string sheetName, List<string> fields, List<string> types, List<List<object>> rows, List<FieldGroup> fieldGroups)
         {
             SheetName = sheetName;
             Fields = fields;
             Types = types;
             Rows = rows;
+            FieldGroups = fieldGroups;
         }
 
         public string SheetName { get; }
         public List<string> Fields { get; }
         public List<string> Types { get; }
         public List<List<object>> Rows { get; }
+        public List<FieldGroup> FieldGroups { get; }
+    }
+
+    private class FieldGroup
+    {
+        public FieldGroup(string name, string type, int columnIndex)
+        {
+            Name = name;
+            Type = type;
+            ColumnIndexes.Add(columnIndex);
+        }
+
+        public string Name { get; }
+        public string Type { get; }
+        public List<int> ColumnIndexes { get; } = new List<int>();
+        public bool IsList => ColumnIndexes.Count > 1;
+
+        public void AddColumn(string type, int columnIndex)
+        {
+            ColumnIndexes.Add(columnIndex);
+        }
     }
 }

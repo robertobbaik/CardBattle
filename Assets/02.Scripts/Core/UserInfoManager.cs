@@ -3,8 +3,6 @@ using System.Collections.Generic;
 
 public class UserInfoManager : MonoBehaviour
 {
-    private const string CurrentDecKey = "CurrentDec";
-
     public static UserInfoManager Instance { get; private set; }
 
     [SerializeField] private List<int> _currentDec = new List<int>();
@@ -27,7 +25,7 @@ public class UserInfoManager : MonoBehaviour
 
     private void LoadCurrentDec()
     {
-        string currentDecJson = PlayerPrefs.GetString(CurrentDecKey);
+        string currentDecJson = PlayerPrefs.GetString(GlobalString.CurrentDecKey);
 
         if (string.IsNullOrEmpty(currentDecJson))
         {

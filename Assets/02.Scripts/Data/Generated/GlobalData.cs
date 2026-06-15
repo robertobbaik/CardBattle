@@ -6,25 +6,10 @@ public class CardData
 {
     public int cardId;
     public int cardType;
+    public int cardTextKey;
     public int maxHp;
     public int startHp;
-    public float damageMultiplier;
-    public float counterDamageMultiplier;
-    public float adjacentDamageMultiplier;
-    public int maxAdjacentTargets;
-    public int turnStartHealAmount;
-    public int damageReduction;
-    public int flatDamageBonus;
-    public bool hasTurnStartEffect;
-    public bool ignoresCounter;
-    public bool appliesWeaken;
-    public bool appliesInspired;
-    public bool hasDeathTrigger;
-    public int executeThresholdHp;
-    public int selfDamageOnAttack;
-    public int weakenAmount;
-    public int weakenDurationTurns;
-    public int deathDamage;
+    public List<float> uniqueValue;
 
     [Serializable]
     public class Table
@@ -42,5 +27,48 @@ public class CardData
 
             return dataById;
         }
+    }
+}
+
+[Serializable]
+public class CardTextData
+{
+    public int cardTextKey;
+    public string koreanName;
+    public string koreanDescription;
+    public string englishName;
+    public string englishDescription;
+
+    [Serializable]
+    public class Table
+    {
+        public List<CardTextData> items = new List<CardTextData>();
+
+        public Dictionary<int, CardTextData> ToDictionary()
+        {
+            Dictionary<int, CardTextData> dataById = new Dictionary<int, CardTextData>(items.Count);
+
+            foreach (CardTextData data in items)
+            {
+                dataById.Add(data.cardTextKey, data);
+            }
+
+            return dataById;
+        }
+    }
+
+    public string GetName(string languageCode)
+    {
+        return NormalizeLanguageCode(languageCode) == GlobalString.LanguageKo ? koreanName : englishName;
+    }
+
+    public string GetDescription(string languageCode)
+    {
+        return NormalizeLanguageCode(languageCode) == GlobalString.LanguageKo ? koreanDescription : englishDescription;
+    }
+
+    private static string NormalizeLanguageCode(string languageCode)
+    {
+        return string.Equals(languageCode, GlobalString.LanguageKo, StringComparison.OrdinalIgnoreCase) ? GlobalString.LanguageKo : GlobalString.LanguageEn;
     }
 }

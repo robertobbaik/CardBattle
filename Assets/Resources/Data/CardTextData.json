@@ -1,0 +1,74 @@
+{
+  "items": [
+    {
+      "cardTextKey": 1,
+      "koreanName": "일반 병사",
+      "koreanDescription": "기본 능력치를 가진 표준 카드입니다.",
+      "englishName": "Normal Soldier",
+      "englishDescription": "A standard card with balanced stats."
+    },
+    {
+      "cardTextKey": 2,
+      "koreanName": "원거리 병사",
+      "koreanDescription": "후방에서 안정적으로 공격하는 카드입니다.",
+      "englishName": "Ranged Soldier",
+      "englishDescription": "A card that attacks reliably from the back line."
+    },
+    {
+      "cardTextKey": 3,
+      "koreanName": "무쌍 병사",
+      "koreanDescription": "강한 전투 지속력을 가진 핵심 공격 카드입니다.",
+      "englishName": "Peerless Soldier",
+      "englishDescription": "A core attack card with strong combat pressure."
+    },
+    {
+      "cardTextKey": 4,
+      "koreanName": "치유사",
+      "koreanDescription": "아군의 체력을 회복시키는 지원 카드입니다.",
+      "englishName": "Healer",
+      "englishDescription": "A support card that restores ally health."
+    },
+    {
+      "cardTextKey": 5,
+      "koreanName": "수호자",
+      "koreanDescription": "높은 체력으로 전열을 지키는 방어 카드입니다.",
+      "englishName": "Guardian",
+      "englishDescription": "A defensive card that protects the front line with high health."
+    },
+    {
+      "cardTextKey": 6,
+      "koreanName": "암살자",
+      "koreanDescription": "핵심 대상을 빠르게 제거하는 공격 카드입니다.",
+      "englishName": "Assassin",
+      "englishDescription": "An attack card that quickly removes priority targets."
+    },
+    {
+      "cardTextKey": 7,
+      "koreanName": "광전사",
+      "koreanDescription": "피해를 감수하고 강하게 압박하는 카드입니다.",
+      "englishName": "Berserker",
+      "englishDescription": "A card that pressures enemies aggressively while taking risks."
+    },
+    {
+      "cardTextKey": 8,
+      "koreanName": "주술사",
+      "koreanDescription": "특수 효과로 전투 흐름을 바꾸는 카드입니다.",
+      "englishName": "Shaman",
+      "englishDescription": "A card that changes battle flow with special effects."
+    },
+    {
+      "cardTextKey": 9,
+      "koreanName": "지휘관",
+      "koreanDescription": "아군의 전투 능력을 끌어올리는 카드입니다.",
+      "englishName": "Commander",
+      "englishDescription": "A card that improves allied combat performance."
+    },
+    {
+      "cardTextKey": 10,
+      "koreanName": "폭탄병",
+      "koreanDescription": "폭발 피해로 적 진형을 무너뜨리는 카드입니다.",
+      "englishName": "Bomber",
+      "englishDescription": "A card that disrupts enemy formations with explosive damage."
+    }
+  ]
+}

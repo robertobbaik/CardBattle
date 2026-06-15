@@ -9,11 +9,11 @@ public class LobbyManager : MonoBehaviour
     private bool _isInitialized;
 
     [SerializeField]
-    [SerializedDictionary("Screen Type", "Screen")]
+    [SerializedDictionary(GlobalString.LobbyScreenTypeLabel, GlobalString.LobbyScreenLabel)]
     private SerializedDictionary<LobbyScreenType, BaseScreen> _screens;
 
     [SerializeField]
-    [SerializedDictionary("Screen Type", "Button")]
+    [SerializedDictionary(GlobalString.LobbyScreenTypeLabel, GlobalString.LobbyButtonLabel)]
     private SerializedDictionary<LobbyScreenType, Button> _screenButtons;
 
     private void Awake()
