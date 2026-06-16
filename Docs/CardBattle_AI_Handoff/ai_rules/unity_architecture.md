@@ -169,6 +169,12 @@ Input/UI -> BattleManager -> BoardManager / EffectResolver -> CardModel -> CardV
 Coroutines may be used for simple AI delay or animation timing.
 Do not hide core battle logic inside long coroutines.
 
+## Flow Control Rule
+
+Prefer event-driven programming for scene and battle flow.
+Each step should notify completion and let the owning coordinator call the next explicit function.
+Do not implement the main game sequence as one long coroutine that waits through every phase.
+
 ## Testing Rule
 
 Every completed battle system change should be manually tested with:

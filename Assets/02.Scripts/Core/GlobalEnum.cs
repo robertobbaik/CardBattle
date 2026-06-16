@@ -35,6 +35,13 @@ public enum TurnOwner
     Enemy
 }
 
+public enum CardOwner
+{
+    None,
+    Player,
+    Enemy
+}
+
 public enum EnemyState
 {
     None,

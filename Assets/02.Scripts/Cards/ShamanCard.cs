@@ -1,3 +1,5 @@
+using UnityEngine;
+
 public class ShamanCard : BaseCard
 {
     public override CardType CardType => CardType.Shaman;
@@ -9,6 +11,6 @@ public class ShamanCard : BaseCard
 
     public override void Destroy()
     {
-        UnityEngine.Object.Destroy(gameObject);
+        Object.Destroy(gameObject);
     }
 }

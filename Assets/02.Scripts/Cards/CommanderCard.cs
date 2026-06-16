@@ -1,3 +1,5 @@
+using UnityEngine;
+
 public class CommanderCard : BaseCard
 {
     public override CardType CardType => CardType.Commander;
@@ -9,6 +11,6 @@ public class CommanderCard : BaseCard
 
     public override void Destroy()
     {
-        UnityEngine.Object.Destroy(gameObject);
+        Object.Destroy(gameObject);
     }
 }

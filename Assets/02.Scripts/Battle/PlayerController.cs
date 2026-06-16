@@ -5,17 +5,20 @@ using System.Collections.Generic;
 public class PlayerController : MonoBehaviour
 {
     private const int InitialOpenCardCount = 3;
+    private const int TotalCardCount = 6;
 
     public static PlayerController Instance { get; private set; }
 
     [SerializeField] private List<Transform> _cardParents = new List<Transform>(6);
 
     private List<int> _currentDec = new List<int>();
-    private List<BaseCard> _cards = new List<BaseCard>();
+    private List<BaseCard> _cards = new List<BaseCard>(TotalCardCount);
+    private Queue<BaseCard> _waitingCardQueue = new Queue<BaseCard>();
     private Coroutine _openCardsCoroutine;
 
     public List<int> CurrentDec => _currentDec;
     public List<BaseCard> Cards => _cards;
+    public Queue<BaseCard> WaitingCardQueue => _waitingCardQueue;
 
     private void Awake()
     {
@@ -28,17 +31,28 @@ public class PlayerController : MonoBehaviour
         Instance = this;
     }
 
-    public void Initialize()
+    public void InitializeDec()
     {
         _currentDec = new List<int>(UserInfoManager.Instance.CurrentDec);
         _cards.Clear();
+        _waitingCardQueue.Clear();
+    }
 
-        for (int i = 0; i < _currentDec.Count; i++)
+    public void CreateCards(List<int> selectedCardIds)
+    {
+        _cards.Clear();
+        _waitingCardQueue.Clear();
+
+        int cardIndex = 0;
+        foreach (int cardId in selectedCardIds)
         {
-            BaseCard card = CreateCard(_currentDec[i], i);
+            BaseCard card = CreateCard(cardId, cardIndex);
             if (card != null)
             {
                 _cards.Add(card);
+                _waitingCardQueue.Enqueue(card);
+
+                cardIndex++;
             }
         }
 
@@ -65,9 +79,32 @@ public class PlayerController : MonoBehaviour
         }
 
         card.cardId = cardId;
+        card.SetOwner(CardOwner.Player);
+        card.SetSlotIndex(cardIndex);
         card.Initialize();
 
         return card;
+    }
+
+    public void OnCardDestroyed(BaseCard destroyedCard)
+    {
+        if (destroyedCard == null)
+        {
+            return;
+        }
+
+        int slotIndex = destroyedCard.SlotIndex;
+        if (slotIndex < 0 || slotIndex >= _cards.Count)
+        {
+            return;
+        }
+
+        if (_cards[slotIndex] == destroyedCard)
+        {
+            _cards[slotIndex] = null;
+        }
+
+        FillEmptySlot(slotIndex);
     }
 
     private Transform GetCardParent(int cardIndex)
@@ -92,15 +129,41 @@ public class PlayerController : MonoBehaviour
 
     private IEnumerator OpenCards()
     {
-        int openCardCount = Mathf.Min(InitialOpenCardCount, _cards.Count);
-
-        for (int i = 0; i < openCardCount; i++)
+        for (int i = 0; i < InitialOpenCardCount; i++)
         {
-            _cards[i].FlipToFront();
-            yield return new WaitForSeconds(_cards[i].FlipDuration);
+            BaseCard nextCard = _waitingCardQueue.Dequeue();
+            nextCard.FlipToFront();
+            yield return new WaitForSeconds(nextCard.FlipDuration);
         }
 
         _openCardsCoroutine = null;
+    }
+
+    private void FillEmptySlot(int slotIndex)
+    {
+        if (_waitingCardQueue.Count == 0)
+        {
+            return;
+        }
+
+        BaseCard nextCard = _waitingCardQueue.Dequeue();
+        if (nextCard == null)
+        {
+            return;
+        }
+
+        int hiddenSlotIndex = nextCard.SlotIndex;
+        if (hiddenSlotIndex >= 0 && hiddenSlotIndex < _cards.Count && _cards[hiddenSlotIndex] == nextCard)
+        {
+            _cards[hiddenSlotIndex] = null;
+        }
+
+        _cards[slotIndex] = nextCard;
+        nextCard.transform.SetParent(GetCardParent(slotIndex), false);
+        nextCard.transform.localPosition = Vector3.zero;
+        nextCard.transform.localRotation = Quaternion.identity;
+        nextCard.SetSlotIndex(slotIndex);
+        nextCard.FlipToFront();
     }
 
     private void OnDestroy()

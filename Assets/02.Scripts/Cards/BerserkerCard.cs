@@ -1,3 +1,5 @@
+using UnityEngine;
+
 public class BerserkerCard : BaseCard
 {
     public override CardType CardType => CardType.Berserker;
@@ -9,6 +11,6 @@ public class BerserkerCard : BaseCard
 
     public override void Destroy()
     {
-        UnityEngine.Object.Destroy(gameObject);
+        Object.Destroy(gameObject);
     }
 }

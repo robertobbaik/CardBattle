@@ -120,3 +120,6 @@ Temporary shortcuts are allowed only if marked clearly.
 - Do not use magic numbers without explanation.
 - Do not create circular dependencies between managers.
 - Do not mix player input handling with enemy AI decision logic.
+- Avoid `FindObjectOfType`, `FindObjectsOfType`, `FindAnyObjectByType`, and similar scene-wide object lookup APIs.
+- Do not use `TryGetValue` or `out` syntax in project code unless the developer explicitly approves it for a specific case.
+- Do not introduce `IReadOnlyList` or other read-only collection interfaces without a clear project-specific reason. Existing Excel importer code is exempt.

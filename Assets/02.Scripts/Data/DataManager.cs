@@ -94,4 +94,11 @@ public class DataManager : MonoBehaviour
     {
         return _cardIconByType[cardType];
     }
+
+    public Sprite GetCardIcon(int cardId)
+    {
+        CardData cardData = _cardDataById[cardId];
+        CardType cardType = (CardType)cardData.cardType;
+        return GetCardIcon(cardType);
+    }
 }

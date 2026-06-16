@@ -1,3 +1,5 @@
+using UnityEngine;
+
 public class RangedCard : BaseCard
 {
     public override CardType CardType => CardType.Ranged;
@@ -9,6 +11,6 @@ public class RangedCard : BaseCard
 
     public override void Destroy()
     {
-        UnityEngine.Object.Destroy(gameObject);
+        Object.Destroy(gameObject);
     }
 }

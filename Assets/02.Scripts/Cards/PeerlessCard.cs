@@ -1,3 +1,5 @@
+using UnityEngine;
+
 public class PeerlessCard : BaseCard
 {
     public override CardType CardType => CardType.Peerless;
@@ -9,6 +11,6 @@ public class PeerlessCard : BaseCard
 
     public override void Destroy()
     {
-        UnityEngine.Object.Destroy(gameObject);
+        Object.Destroy(gameObject);
     }
 }

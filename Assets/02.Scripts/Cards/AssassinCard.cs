@@ -1,3 +1,5 @@
+using UnityEngine;
+
 public class AssassinCard : BaseCard
 {
     public override CardType CardType => CardType.Assassin;
@@ -9,6 +11,6 @@ public class AssassinCard : BaseCard
 
     public override void Destroy()
     {
-        UnityEngine.Object.Destroy(gameObject);
+        Object.Destroy(gameObject);
     }
 }

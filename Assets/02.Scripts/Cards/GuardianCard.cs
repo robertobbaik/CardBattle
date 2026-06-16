@@ -1,3 +1,5 @@
+using UnityEngine;
+
 public class GuardianCard : BaseCard
 {
     public override CardType CardType => CardType.Guardian;
@@ -9,6 +11,6 @@ public class GuardianCard : BaseCard
 
     public override void Destroy()
     {
-        UnityEngine.Object.Destroy(gameObject);
+        Object.Destroy(gameObject);
     }
 }

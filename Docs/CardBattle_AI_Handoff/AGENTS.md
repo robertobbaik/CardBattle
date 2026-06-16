@@ -69,6 +69,9 @@ After implementation, the AI must report:
 - Build or compile status if available
 - Remaining risks or TODOs
 
+Do not repeatedly report routine forbidden-pattern checks in every completion message.
+Follow the rule files while working, and mention those checks only when a violation, exception, or relevant risk exists.
+
 ## Restrictions
 
 - Do not silently change unrelated systems.
