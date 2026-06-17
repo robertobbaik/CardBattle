@@ -11,6 +11,7 @@ public static class GlobalString
     public const string CurrentDecKey = "CurrentDec";
     public const string ResourceCardsPath = "Cards";
     public const string ResourceCardIconsPath = "CardIcons";
+    public const string ResourceFxPath = "FX";
     public const string ResourceCardDataPath = "Data/CardData";
     public const string ResourceCardTextDataPath = "Data/CardTextData";
     public const string CardIconFileSuffix = "_icon_rounded";

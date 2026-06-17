@@ -16,18 +16,23 @@ public class HealerCard : BaseCard
             return;
         }
 
-        AttackWithCounter(target, GetAttackDamage());
+        target.TakeDamage(GetAttackDamage(), this);
         MarkAsActed();
+    }
+
+    public override void ReflectDamage(BaseCard target, int targetHpBeforeDamage)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        TakeReflectDamage(targetHpBeforeDamage, target);
     }
 
     public override void OnTurnStart()
     {
         HealAllies();
-    }
-
-    public override void Destroy()
-    {
-        Object.Destroy(gameObject);
     }
 
     private void HealAllies()

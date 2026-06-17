@@ -53,6 +53,7 @@ public class EnemyController : MonoBehaviour
     public void CreateCards(Action onComplete)
     {
         List<int> orderedDec = new List<int>(GetDec());
+        ShuffleDec(orderedDec);
 
         _cards.Clear();
         _waitingCardQueue.Clear();
@@ -73,6 +74,29 @@ public class EnemyController : MonoBehaviour
         StartOpenCards(onComplete);
     }
 
+    private void ShuffleDec(List<int> dec)
+    {
+        if (dec == null || dec.Count < 2)
+        {
+            return;
+        }
+
+        for (int i = dec.Count - 1; i > 0; i--)
+        {
+            int randomIndex = UnityEngine.Random.Range(0, i + 1);
+            if (randomIndex == i)
+            {
+                continue;
+            }
+
+            int temp = dec[i];
+            dec[i] = dec[randomIndex];
+            dec[randomIndex] = temp;
+        }
+
+        Debug.Log(string.Format("Enemy Dec Shuffled - {0}", string.Join(",", dec)));
+    }
+
     public void ChangeState(EnemyState nextState)
     {
         if (_currentState == nextState)
@@ -88,19 +112,15 @@ public class EnemyController : MonoBehaviour
     {
         List<BaseCard> targetCards = new List<BaseCard>(3);
 
-        for (int i = 0; i < InitialOpenCardCount; i++)
+        for (int i = 0; i < _cards.Count; i++)
         {
-            if (i >= _cards.Count)
-            {
-                break;
-            }
-
-            if (_cards[i] == null)
+            BaseCard card = _cards[i];
+            if (card == null || !card.IsAlive || !card.IsOpen)
             {
                 continue;
             }
 
-            targetCards.Add(_cards[i]);
+            targetCards.Add(card);
         }
 
         return targetCards;
@@ -110,15 +130,10 @@ public class EnemyController : MonoBehaviour
     {
         ClearGuard();
 
-        for (int i = 0; i < InitialOpenCardCount; i++)
+        for (int i = 0; i < _cards.Count; i++)
         {
-            if (i >= _cards.Count)
-            {
-                break;
-            }
-
             BaseCard card = _cards[i];
-            if (card == null)
+            if (card == null || !card.IsAlive || !card.IsOpen)
             {
                 continue;
             }
@@ -173,12 +188,12 @@ public class EnemyController : MonoBehaviour
             return;
         }
 
-        if (_cards[slotIndex] == destroyedCard)
-        {
-            _cards[slotIndex] = null;
-        }
+        FillEmptySlot(destroyedCard);
 
-        FillEmptySlot(slotIndex);
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.CheckBattleResult();
+        }
     }
 
     public void StartActionSequence(Action onComplete)
@@ -268,15 +283,10 @@ public class EnemyController : MonoBehaviour
 
     private BaseCard GetActionCard()
     {
-        for (int i = 0; i < InitialOpenCardCount; i++)
+        for (int i = 0; i < _cards.Count; i++)
         {
-            if (i >= _cards.Count)
-            {
-                break;
-            }
-
             BaseCard card = _cards[i];
-            if (card != null)
+            if (card != null && card.IsAlive && card.IsOpen)
             {
                 return card;
             }
@@ -293,15 +303,10 @@ public class EnemyController : MonoBehaviour
         }
 
         List<BaseCard> playerCards = PlayerController.Instance.Cards;
-        for (int i = 0; i < InitialOpenCardCount; i++)
+        for (int i = 0; i < playerCards.Count; i++)
         {
-            if (i >= playerCards.Count)
-            {
-                break;
-            }
-
             BaseCard card = playerCards[i];
-            if (card != null)
+            if (card != null && card.IsAlive && card.IsOpen)
             {
                 return card;
             }
@@ -370,13 +375,14 @@ public class EnemyController : MonoBehaviour
         onComplete?.Invoke();
     }
 
-    private void FillEmptySlot(int slotIndex)
+    private void FillEmptySlot(BaseCard destroyedCard)
     {
         if (_waitingCardQueue.Count == 0)
         {
             return;
         }
 
+        int slotIndex = destroyedCard.SlotIndex;
         BaseCard nextCard = _waitingCardQueue.Dequeue();
         if (nextCard == null)
         {
@@ -384,22 +390,22 @@ public class EnemyController : MonoBehaviour
         }
 
         int hiddenSlotIndex = nextCard.SlotIndex;
-        if (hiddenSlotIndex >= 0 && hiddenSlotIndex < _cards.Count && _cards[hiddenSlotIndex] == nextCard)
+        if (hiddenSlotIndex >= 0 && hiddenSlotIndex < _cards.Count)
         {
-            _cards[hiddenSlotIndex] = null;
+            _cards[hiddenSlotIndex] = destroyedCard;
         }
 
         _cards[slotIndex] = nextCard;
+        destroyedCard.SetSlotIndex(hiddenSlotIndex);
+        destroyedCard.transform.SetParent(GetCardParent(hiddenSlotIndex), false);
+        destroyedCard.transform.localPosition = Vector3.zero;
+        destroyedCard.transform.localRotation = Quaternion.identity;
+
         nextCard.transform.SetParent(GetCardParent(slotIndex), false);
         nextCard.transform.localPosition = Vector3.zero;
         nextCard.transform.localRotation = Quaternion.identity;
         nextCard.SetSlotIndex(slotIndex);
         nextCard.FlipToFront();
-
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.CheckBattleResult();
-        }
     }
 
     private void OnDestroy()
@@ -439,13 +445,13 @@ public class EnemyController : MonoBehaviour
 
     private void AddAdjacentCandidate(List<BaseCard> candidates, int slotIndex)
     {
-        if (slotIndex < 0 || slotIndex >= InitialOpenCardCount || slotIndex >= _cards.Count)
+        if (slotIndex < 0 || slotIndex >= _cards.Count)
         {
             return;
         }
 
         BaseCard card = _cards[slotIndex];
-        if (card == null)
+        if (card == null || !card.IsAlive || !card.IsOpen)
         {
             return;
         }
@@ -455,14 +461,24 @@ public class EnemyController : MonoBehaviour
 
     public bool HasAliveBattlefieldCards()
     {
-        for (int i = 0; i < InitialOpenCardCount; i++)
+        for (int i = 0; i < _cards.Count; i++)
         {
-            if (i >= _cards.Count)
+            BaseCard card = _cards[i];
+            if (card != null && card.IsAlive && (card.IsOpen || card.IsOpening))
             {
-                break;
+                return true;
             }
+        }
 
-            if (_cards[i] != null)
+        return false;
+    }
+
+    public bool HasDestroyingBattlefieldCards()
+    {
+        for (int i = 0; i < _cards.Count; i++)
+        {
+            BaseCard card = _cards[i];
+            if (card != null && card.IsAlive && (card.IsOpen || card.IsOpening) && card.IsDestroying)
             {
                 return true;
             }

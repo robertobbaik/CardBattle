@@ -20,13 +20,8 @@ public class RangedCard : BaseCard
         MarkAsActed();
     }
 
-    protected override bool ShouldReceiveCounter(BaseCard target)
+    public override void ReflectDamage(BaseCard target, int targetHpBeforeDamage)
     {
-        return false;
     }
 
-    public override void Destroy()
-    {
-        Object.Destroy(gameObject);
-    }
 }

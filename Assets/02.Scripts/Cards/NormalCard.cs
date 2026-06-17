@@ -16,12 +16,18 @@ public class NormalCard : BaseCard
             return;
         }
 
-        AttackWithCounter(target, GetAttackDamage());
+        target.TakeDamage(GetAttackDamage(), this);
         MarkAsActed();
     }
 
-    public override void Destroy()
+    public override void ReflectDamage(BaseCard target, int targetHpBeforeDamage)
     {
-        Object.Destroy(gameObject);
+        if (target == null)
+        {
+            return;
+        }
+
+        TakeReflectDamage(targetHpBeforeDamage, target);
     }
+
 }

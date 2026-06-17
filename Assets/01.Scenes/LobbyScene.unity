@@ -1817,10 +1817,10 @@ RectTransform:
   - {fileID: 3411723313147844449}
   m_Father: {fileID: 2124427026}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &2124427022
 GameObject:
@@ -1935,6 +1935,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1870032659}
     m_Modifications:
+    - target: {fileID: 3123476119042944623, guid: c5e5f8043f9c841cb955ce38a163950a, type: 3}
+      propertyPath: m_Alpha
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3248464604722608996, guid: c5e5f8043f9c841cb955ce38a163950a, type: 3}
       propertyPath: m_Name
       value: Screen - Inventory
@@ -2046,6 +2050,10 @@ PrefabInstance:
     - target: {fileID: 2929511374240804535, guid: b5dac12f1948445718065b95122c1f62, type: 3}
       propertyPath: m_Name
       value: Screen - Shop
+      objectReference: {fileID: 0}
+    - target: {fileID: 2929511374240804535, guid: b5dac12f1948445718065b95122c1f62, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5988057627937981414, guid: b5dac12f1948445718065b95122c1f62, type: 3}
       propertyPath: m_Pivot.x
@@ -2241,9 +2249,41 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1547759264927586780, guid: 9e5d66bf0780f44a9a85e544a572cb2c, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 600
+      objectReference: {fileID: 0}
+    - target: {fileID: 1547759264927586780, guid: 9e5d66bf0780f44a9a85e544a572cb2c, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 300
+      objectReference: {fileID: 0}
     - target: {fileID: 2155384010011136953, guid: 9e5d66bf0780f44a9a85e544a572cb2c, type: 3}
       propertyPath: m_Name
       value: Screen - Main
+      objectReference: {fileID: 0}
+    - target: {fileID: 2155384010011136953, guid: 9e5d66bf0780f44a9a85e544a572cb2c, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4710705848304647855, guid: 9e5d66bf0780f44a9a85e544a572cb2c, type: 3}
+      propertyPath: m_Transition
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9138977080568039363, guid: 9e5d66bf0780f44a9a85e544a572cb2c, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 993d96ef8e894d77a6d1778f244efafb, type: 3}
+    - target: {fileID: 9138977080568039363, guid: 9e5d66bf0780f44a9a85e544a572cb2c, type: 3}
+      propertyPath: m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9138977080568039363, guid: 9e5d66bf0780f44a9a85e544a572cb2c, type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9138977080568039363, guid: 9e5d66bf0780f44a9a85e544a572cb2c, type: 3}
+      propertyPath: m_Color.r
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2261,6 +2301,10 @@ PrefabInstance:
     - target: {fileID: 4587403310699526572, guid: 8c82b5431f2744147af544b66a3c419b, type: 3}
       propertyPath: m_Name
       value: Screen - Collection
+      objectReference: {fileID: 0}
+    - target: {fileID: 4587403310699526572, guid: 8c82b5431f2744147af544b66a3c419b, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6288677568440948698, guid: 8c82b5431f2744147af544b66a3c419b, type: 3}
       propertyPath: m_Pivot.x

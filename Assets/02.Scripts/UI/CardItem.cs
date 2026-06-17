@@ -32,7 +32,7 @@ public class CardItem : MonoBehaviour
     {
         _nameText.text = DataManager.Instance.GetCardName(cardData.cardTextKey);
         _descriptionText.text = DataManager.Instance.GetCardDescription(cardData.cardTextKey);
-        _hpText.text = cardData.startHp.ToString();
+        _hpText.text = string.Format("{0}/{1}", cardData.startHp, cardData.startHp);
         _iconImage.sprite = DataManager.Instance.GetCardIcon(cardData.cardId);
         SetOrder(0);
     }

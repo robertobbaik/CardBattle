@@ -12,6 +12,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private StartPanel _startPanel;
     [SerializeField] private CardSelectPanel _selectPanel;
     [SerializeField] private ActionPanel _actionPanel;
+    [SerializeField] private GameOverPanel _gameOverPanel;
 
     private SequenceState _sequenceState = SequenceState.None;
     private BaseCard _focusedActionCard;
@@ -34,6 +35,7 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         HideActionPanel();
+        HideGameOverPanel();
         _battleEnded = false;
 
         EnemyController.Instance.Initialize();
@@ -100,7 +102,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        if (card.SlotIndex >= 3)
+        if (!card.IsAlive || !card.IsOpen)
         {
             return;
         }
@@ -319,7 +321,11 @@ public class GameManager : MonoBehaviour
 
         if (TurnManager.Instance != null)
         {
-            TurnManager.Instance.EndTurn();
+            TurnManager.Instance.EndTurn(delegate
+            {
+                EndSequenceState();
+            });
+            return;
         }
 
         EndSequenceState();
@@ -386,12 +392,13 @@ public class GameManager : MonoBehaviour
 
         if (TurnManager.Instance != null)
         {
-            TurnManager.Instance.EndTurn();
-        }
-
-        if (!CheckBattleResult())
-        {
-            BeginEnemyActionSequence();
+            TurnManager.Instance.EndTurn(delegate
+            {
+                if (!_battleEnded)
+                {
+                    BeginEnemyActionSequence();
+                }
+            });
         }
     }
 
@@ -442,6 +449,16 @@ public class GameManager : MonoBehaviour
             return true;
         }
 
+        if (PlayerController.Instance != null && PlayerController.Instance.HasDestroyingBattlefieldCards())
+        {
+            return false;
+        }
+
+        if (EnemyController.Instance != null && EnemyController.Instance.HasDestroyingBattlefieldCards())
+        {
+            return false;
+        }
+
         bool playerHasCards = PlayerController.Instance != null && PlayerController.Instance.HasAliveBattlefieldCards();
         bool enemyHasCards = EnemyController.Instance != null && EnemyController.Instance.HasAliveBattlefieldCards();
 
@@ -450,21 +467,21 @@ public class GameManager : MonoBehaviour
             return false;
         }
 
-        string winner = "Draw";
+        string result = "Draw";
         if (playerHasCards && !enemyHasCards)
         {
-            winner = "Player";
+            result = "Win";
         }
         else if (!playerHasCards && enemyHasCards)
         {
-            winner = "Enemy";
+            result = "Lose";
         }
 
-        BeginGameOver(winner);
+        BeginGameOver(result);
         return true;
     }
 
-    private void BeginGameOver(string winner)
+    private void BeginGameOver(string result)
     {
         if (_battleEnded)
         {
@@ -483,7 +500,8 @@ public class GameManager : MonoBehaviour
             _focusedActionCard = null;
         }
 
-        Debug.Log(string.Format("GameOver - Winner: {0}", winner));
+        Debug.Log(string.Format("GameOver - Result: {0}", result));
+        ShowGameOverPanel(GetGameOverText(result));
 
         if (_returnToLobbyCoroutine != null)
         {
@@ -501,5 +519,40 @@ public class GameManager : MonoBehaviour
         {
             SceneManager.Instance.LoadScene(SceneType.LobbyScene);
         }
+    }
+
+    private void ShowGameOverPanel(string resultText)
+    {
+        if (_gameOverPanel == null)
+        {
+            return;
+        }
+
+        _gameOverPanel.Show(resultText);
+    }
+
+    private void HideGameOverPanel()
+    {
+        if (_gameOverPanel == null)
+        {
+            return;
+        }
+
+        _gameOverPanel.Hide();
+    }
+
+    private static string GetGameOverText(string result)
+    {
+        if (result == "Win")
+        {
+            return "승";
+        }
+
+        if (result == "Lose")
+        {
+            return "패";
+        }
+
+        return "무";
     }
 }

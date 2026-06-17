@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class ShamanCard : BaseCard
@@ -22,11 +23,36 @@ public class ShamanCard : BaseCard
             damage = 1;
         }
 
-        AttackWithCounter(target, damage);
+        target.TakeDamage(damage, this);
         MarkAsActed();
     }
 
+    public override void ReflectDamage(BaseCard target, int targetHpBeforeDamage)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        TakeReflectDamage(targetHpBeforeDamage, target);
+    }
+
     public override bool CanUseSkill => true;
+
+    protected override void OnEnterField()
+    {
+        List<BaseCard> cards = GetEnemyBattlefieldCards();
+        for (int i = 0; i < cards.Count; i++)
+        {
+            BaseCard card = cards[i];
+            if (card == null || !card.IsAlive || !card.IsOpen)
+            {
+                continue;
+            }
+
+            card.ReduceHealth(2, this);
+        }
+    }
 
     public override void UseSkill(BaseCard target = null)
     {
@@ -44,8 +70,18 @@ public class ShamanCard : BaseCard
         MarkAsActed();
     }
 
-    public override void Destroy()
+    private List<BaseCard> GetEnemyBattlefieldCards()
     {
-        Object.Destroy(gameObject);
+        if (Owner == CardOwner.Player && EnemyController.Instance != null)
+        {
+            return EnemyController.Instance.Cards;
+        }
+
+        if (Owner == CardOwner.Enemy && PlayerController.Instance != null)
+        {
+            return PlayerController.Instance.Cards;
+        }
+
+        return new List<BaseCard>();
     }
 }

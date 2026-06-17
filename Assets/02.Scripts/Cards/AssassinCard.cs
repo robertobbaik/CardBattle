@@ -20,6 +20,27 @@ public class AssassinCard : BaseCard
         MarkAsActed();
     }
 
+    public override void ReflectDamage(BaseCard target, int targetHpBeforeDamage)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        if (target.Hp <= 0)
+        {
+            return;
+        }
+
+        int reflectedDamage = Mathf.FloorToInt(targetHpBeforeDamage * 1.5f);
+        if (reflectedDamage <= 0)
+        {
+            return;
+        }
+
+        TakeReflectDamage(reflectedDamage, target);
+    }
+
     public override bool CanUseSkill => true;
 
     public override void UseSkill(BaseCard target = null)
@@ -44,13 +65,4 @@ public class AssassinCard : BaseCard
         MarkAsActed();
     }
 
-    protected override bool ShouldReceiveCounter(BaseCard target)
-    {
-        return false;
-    }
-
-    public override void Destroy()
-    {
-        Object.Destroy(gameObject);
-    }
 }

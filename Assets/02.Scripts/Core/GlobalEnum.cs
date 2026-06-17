@@ -62,5 +62,6 @@ public enum FXKind
     Damage,
     Heal,
     Lining,
-    DoubleSlash
+    DoubleSlash,
+    Destroy
 }

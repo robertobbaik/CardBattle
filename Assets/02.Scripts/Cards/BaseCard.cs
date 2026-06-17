@@ -28,11 +28,18 @@ public abstract class BaseCard : MonoBehaviour
     private Button _button;
     private Image _highlightImage;
     private int _currentHp;
+    private int _initialHp;
     private int _slotIndex = -1;
     private int _nextAttackModifier;
     private bool _hasActedThisTurn;
+    private bool _isDestroying;
+    private bool _hasEnteredField;
+    private bool _isOpen;
+    private bool _isOpening;
+    private bool _isAlive;
     private Sequence _flipSequence;
     private Sequence _damageShakeSequence;
+    private Sequence _destroyShakeSequence;
     private Color _defaultHighlightColor = Color.white;
 
     public CardOwner Owner => _owner;
@@ -50,12 +57,17 @@ public abstract class BaseCard : MonoBehaviour
     }
 
     public int Hp => _currentHp;
+    public int InitialHp => _initialHp;
     public int AttackPower => _currentHp;
     public int SlotIndex => _slotIndex;
     public int MaxHp => maxHp;
     public bool HasActedThisTurn => _hasActedThisTurn;
+    public bool IsDestroying => _isDestroying;
+    public bool IsOpen => _isOpen;
+    public bool IsOpening => _isOpening;
+    public bool IsAlive => _isAlive;
 
-    public virtual bool CanAttack => _currentHp > 0 && !_hasActedThisTurn;
+    public virtual bool CanAttack => _isAlive && _currentHp > 0 && !_hasActedThisTurn && !_isDestroying;
 
     public virtual bool CanUseSkill => false;
 
@@ -63,7 +75,7 @@ public abstract class BaseCard : MonoBehaviour
 
     public abstract void Attack(BaseCard target);
 
-    public abstract void Destroy();
+    public abstract void ReflectDamage(BaseCard target, int targetHpBeforeDamage);
 
     protected virtual void Awake()
     {
@@ -123,6 +135,10 @@ public abstract class BaseCard : MonoBehaviour
     {
     }
 
+    protected virtual void OnEnterField()
+    {
+    }
+
     public virtual void UseSkill(BaseCard target = null)
     {
     }
@@ -139,26 +155,21 @@ public abstract class BaseCard : MonoBehaviour
         uniqueValue = new List<float>(cardData.uniqueValue);
 
         _currentHp = startHp;
+        _initialHp = startHp;
         _nextAttackModifier = 0;
         _hasActedThisTurn = false;
+        _isDestroying = false;
+        _hasEnteredField = false;
+        _isOpen = false;
+        _isOpening = false;
+        _isAlive = true;
+        gameObject.SetActive(true);
         _iconImage.sprite = DataManager.Instance.GetCardIcon(cardType);
         _nameText.text = cardName;
         _descriptionText.text = cardDescription;
-        _hpText.text = _currentHp.ToString();
+        UpdateHpText();
         SetHighlightActive(false);
         SetBackState();
-    }
-
-    public virtual void ReflectAttack(BaseCard attacker)
-    {
-        if (attacker == null)
-        {
-            Debug.Log($"{name} reflect attack skipped. attacker is null.");
-            return;
-        }
-
-        Debug.Log($"{name} reflect attack. counter owner: {_owner}, attacker owner: {attacker.Owner}");
-        Attack(attacker);
     }
 
     protected int GetAttackDamage()
@@ -172,29 +183,6 @@ public abstract class BaseCard : MonoBehaviour
         }
 
         return attackDamage;
-    }
-
-    protected void AttackWithCounter(BaseCard target, int damage)
-    {
-        if (target == null)
-        {
-            return;
-        }
-
-        target.TakeDamage(damage, this);
-
-        if (!ShouldReceiveCounter(target))
-        {
-            return;
-        }
-
-        int counterDamage = target.Hp;
-        if (counterDamage <= 0)
-        {
-            return;
-        }
-
-        TakeDamage(counterDamage, target);
     }
 
     protected BaseCard GetRandomAdjacentEnemyCard(BaseCard target)
@@ -226,12 +214,6 @@ public abstract class BaseCard : MonoBehaviour
 
         return null;
     }
-
-    protected virtual bool ShouldReceiveCounter(BaseCard target)
-    {
-        return true;
-    }
-
     public void ApplyInspired()
     {
         _nextAttackModifier += 2;
@@ -284,6 +266,8 @@ public abstract class BaseCard : MonoBehaviour
         transform.localScale = Vector3.one;
         _back.SetActive(true);
         _front.SetActive(false);
+        _isOpen = false;
+        _isOpening = true;
 
         float halfDuration = _flipDuration * 0.5f;
         _flipSequence = DOTween.Sequence();
@@ -299,43 +283,43 @@ public abstract class BaseCard : MonoBehaviour
         transform.localScale = Vector3.one;
         _back.SetActive(true);
         _front.SetActive(false);
+        _isOpen = false;
+        _isOpening = false;
     }
 
     private void SwitchToFront()
     {
         _back.SetActive(false);
         _front.SetActive(true);
+        _isOpen = true;
+        _isOpening = false;
+        EnterFieldOnce();
     }
 
-    public void TakeDamage(int damage, BaseCard source = null)
+    private void EnterFieldOnce()
     {
-        if (damage <= 0)
+        if (_hasEnteredField)
         {
             return;
         }
 
-        damage -= GetIncomingDamageReduction();
-        if (damage < 1)
-        {
-            damage = 1;
-        }
+        _hasEnteredField = true;
+        OnEnterField();
+    }
 
-        PlayDamageShake();
-        PlayDamageFX();
-        _currentHp -= damage;
-        _hpText.text = _currentHp.ToString();
+    public void TakeDamage(int damage, BaseCard source = null)
+    {
+        ApplyDamage(damage, source, true);
+    }
 
-        if (_currentHp <= 0)
-        {
-            OnDeath(source);
-            NotifyDestroyed();
-            Destroy();
-        }
+    protected void TakeReflectDamage(int damage, BaseCard source = null)
+    {
+        ApplyDamage(damage, source, false);
     }
 
     public void Heal(int amount)
     {
-        if (amount <= 0)
+        if (amount <= 0 || !_isAlive)
         {
             return;
         }
@@ -343,12 +327,55 @@ public abstract class BaseCard : MonoBehaviour
         PlayHealFX();
         _currentHp += amount;
 
-        if (_currentHp > maxHp)
+        if (_currentHp > _initialHp)
         {
-            _currentHp = maxHp;
+            _currentHp = _initialHp;
         }
 
-        _hpText.text = _currentHp.ToString();
+        UpdateHpText();
+    }
+
+    public void AddHealth(int amount)
+    {
+        if (amount <= 0 || _isDestroying || !_isAlive)
+        {
+            return;
+        }
+
+        _initialHp += amount;
+        _currentHp += amount;
+        UpdateHpText();
+    }
+
+    public void ReduceHealth(int amount, BaseCard source = null)
+    {
+        if (amount <= 0 || _isDestroying || !_isAlive)
+        {
+            return;
+        }
+
+        _initialHp -= amount;
+        if (_initialHp < 0)
+        {
+            _initialHp = 0;
+        }
+
+        _currentHp -= amount;
+        if (_currentHp < 0)
+        {
+            _currentHp = 0;
+        }
+
+        UpdateHpText();
+
+        if (_currentHp <= 0)
+        {
+            BeginDestroySequence(source);
+            return;
+        }
+
+        PlayDamageShake();
+        PlayDamageFX();
     }
 
     private void PlayDamageFX()
@@ -359,6 +386,54 @@ public abstract class BaseCard : MonoBehaviour
         }
 
         FXManager.Instance.PlayDamageFX(transform, Vector3.zero);
+    }
+
+    private void ApplyDamage(int damage, BaseCard source, bool allowReflect)
+    {
+        if (damage <= 0 || _isDestroying || !_isAlive)
+        {
+            return;
+        }
+
+        int hpBeforeDamage = _currentHp;
+
+        damage -= GetIncomingDamageReduction();
+        if (damage < 1)
+        {
+            damage = 1;
+        }
+
+        _currentHp -= damage;
+        if (_currentHp < 0)
+        {
+            _currentHp = 0;
+        }
+
+        UpdateHpText();
+
+        if (allowReflect && source != null && source != this)
+        {
+            source.ReflectDamage(this, hpBeforeDamage);
+        }
+
+        if (_currentHp <= 0)
+        {
+            BeginDestroySequence(source);
+            return;
+        }
+
+        PlayDamageShake();
+        PlayDamageFX();
+    }
+
+    private void UpdateHpText()
+    {
+        if (_hpText == null)
+        {
+            return;
+        }
+
+        _hpText.text = string.Format("{0}/{1}", _currentHp, _initialHp);
     }
 
     private void PlayDamageShake()
@@ -375,6 +450,74 @@ public abstract class BaseCard : MonoBehaviour
         _damageShakeSequence.Append(transform.DOLocalMove(baseLocalPosition - shakeOffset, stepDuration));
         _damageShakeSequence.Append(transform.DOLocalMove(baseLocalPosition + new Vector3(8f, 0f, 0f), stepDuration));
         _damageShakeSequence.Append(transform.DOLocalMove(baseLocalPosition, stepDuration));
+    }
+
+    private void BeginDestroySequence(BaseCard killer)
+    {
+        if (_isDestroying)
+        {
+            return;
+        }
+
+        _isDestroying = true;
+        SetHighlightActive(false);
+        _damageShakeSequence?.Kill();
+        PlayDestroyShake();
+
+        if (FXManager.Instance == null)
+        {
+            CompleteDestroySequence(killer);
+            return;
+        }
+
+        FX destroyFx = FXManager.Instance.PlayDestroyFX(transform, Vector3.zero, delegate
+        {
+            CompleteDestroySequence(killer);
+        });
+
+        if (destroyFx == null)
+        {
+            CompleteDestroySequence(killer);
+        }
+    }
+
+    private void CompleteDestroySequence(BaseCard killer)
+    {
+        OnDeath(killer);
+        MarkDead();
+        NotifyDestroyed();
+    }
+
+    private void MarkDead()
+    {
+        _isAlive = false;
+        _isOpen = false;
+        _isOpening = false;
+        _isDestroying = false;
+        _hasActedThisTurn = true;
+        _damageShakeSequence?.Kill();
+        _destroyShakeSequence?.Kill();
+        SetHighlightActive(false);
+        gameObject.SetActive(false);
+    }
+
+    private void PlayDestroyShake()
+    {
+        _destroyShakeSequence?.Kill();
+
+        Vector3 baseLocalPosition = transform.localPosition;
+        Vector3 strongOffset = new Vector3(22f, 0f, 0f);
+        Vector3 highOffset = new Vector3(14f, 8f, 0f);
+        float shakeDuration = 0.34f;
+        float stepDuration = shakeDuration * 0.2f;
+
+        _destroyShakeSequence = DOTween.Sequence();
+        _destroyShakeSequence.Append(transform.DOLocalMove(baseLocalPosition + strongOffset, stepDuration));
+        _destroyShakeSequence.Append(transform.DOLocalMove(baseLocalPosition - strongOffset, stepDuration));
+        _destroyShakeSequence.Append(transform.DOLocalMove(baseLocalPosition + highOffset, stepDuration));
+        _destroyShakeSequence.Append(transform.DOLocalMove(baseLocalPosition - highOffset, stepDuration));
+        _destroyShakeSequence.Append(transform.DOLocalMove(baseLocalPosition + new Vector3(6f, 0f, 0f), stepDuration));
+        _destroyShakeSequence.Append(transform.DOLocalMove(baseLocalPosition, stepDuration));
     }
 
     private void PlayHealFX()
@@ -426,6 +569,11 @@ public abstract class BaseCard : MonoBehaviour
 
     private void OnClickCard()
     {
+        if (_isDestroying)
+        {
+            return;
+        }
+
         TurnOwner currentTurnOwner = TurnOwner.None;
         if (TurnManager.Instance != null)
         {
@@ -481,5 +629,6 @@ public abstract class BaseCard : MonoBehaviour
     {
         _flipSequence?.Kill();
         _damageShakeSequence?.Kill();
+        _destroyShakeSequence?.Kill();
     }
 }

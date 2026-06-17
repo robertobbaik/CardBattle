@@ -6,15 +6,23 @@ public class FXManager : MonoBehaviour
 {
     public static FXManager Instance { get; private set; }
 
-    [SerializeField] private FX _damageFxPrefab;
-    [SerializeField] private FX _healFxPrefab;
-    [SerializeField] private FX _liningFxPrefab;
-    [SerializeField] private FX _doubleSlashFxPrefab;
+    private const string DamageFxName = "FX - Damage";
+    private const string HealFxName = "Fx - Heal";
+    private const string LiningFxName = "FX - Lining";
+    private const string DoubleSlashFxName = "FX - DoubleSlash";
+    private const string DestroyFxName = "FX - Destroy";
+
+    private GameObject _damageFxPrefab;
+    private GameObject _healFxPrefab;
+    private GameObject _liningFxPrefab;
+    private GameObject _doubleSlashFxPrefab;
+    private GameObject _destroyFxPrefab;
 
     private readonly Queue<FX> _damagePool = new Queue<FX>();
     private readonly Queue<FX> _healPool = new Queue<FX>();
     private readonly Queue<FX> _liningPool = new Queue<FX>();
     private readonly Queue<FX> _doubleSlashPool = new Queue<FX>();
+    private readonly Queue<FX> _destroyPool = new Queue<FX>();
 
     private void Awake()
     {
@@ -25,6 +33,7 @@ public class FXManager : MonoBehaviour
         }
 
         Instance = this;
+        LoadPrefabs();
     }
 
     private void OnDestroy()
@@ -55,6 +64,11 @@ public class FXManager : MonoBehaviour
         return PlayWorld(_doubleSlashFxPrefab, _doubleSlashPool, FXKind.DoubleSlash, parent, worldPosition, worldRotation, onComplete);
     }
 
+    public FX PlayDestroyFX(Transform parent, Vector3 localPosition, Action onComplete)
+    {
+        return PlayLocal(_destroyFxPrefab, _destroyPool, FXKind.Destroy, parent, localPosition, Quaternion.identity, onComplete);
+    }
+
     public void Recycle(FX fx, FXKind kind)
     {
         if (fx == null)
@@ -79,10 +93,35 @@ public class FXManager : MonoBehaviour
             case FXKind.DoubleSlash:
                 _doubleSlashPool.Enqueue(fx);
                 return;
+            case FXKind.Destroy:
+                _destroyPool.Enqueue(fx);
+                return;
         }
     }
 
-    private FX PlayLocal(FX prefab, Queue<FX> pool, FXKind kind, Transform parent, Vector3 localPosition, Quaternion localRotation, Action onComplete)
+    private void LoadPrefabs()
+    {
+        _damageFxPrefab = LoadPrefab(DamageFxName);
+        _healFxPrefab = LoadPrefab(HealFxName);
+        _liningFxPrefab = LoadPrefab(LiningFxName);
+        _doubleSlashFxPrefab = LoadPrefab(DoubleSlashFxName);
+        _destroyFxPrefab = LoadPrefab(DestroyFxName);
+    }
+
+    private GameObject LoadPrefab(string resourceName)
+    {
+        string resourcePath = string.Concat(GlobalString.ResourceFxPath, GlobalString.Slash, resourceName);
+        GameObject prefab = Resources.Load<GameObject>(resourcePath);
+
+        if (prefab == null)
+        {
+            Debug.LogError(string.Format(GlobalString.ResourceNotFoundMessage, resourcePath));
+        }
+
+        return prefab;
+    }
+
+    private FX PlayLocal(GameObject prefab, Queue<FX> pool, FXKind kind, Transform parent, Vector3 localPosition, Quaternion localRotation, Action onComplete)
     {
         if (prefab == null)
         {
@@ -99,7 +138,7 @@ public class FXManager : MonoBehaviour
         return fx;
     }
 
-    private FX PlayWorld(FX prefab, Queue<FX> pool, FXKind kind, Transform parent, Vector3 worldPosition, Quaternion worldRotation, Action onComplete)
+    private FX PlayWorld(GameObject prefab, Queue<FX> pool, FXKind kind, Transform parent, Vector3 worldPosition, Quaternion worldRotation, Action onComplete)
     {
         if (prefab == null)
         {
@@ -116,7 +155,7 @@ public class FXManager : MonoBehaviour
         return fx;
     }
 
-    private FX GetInstance(FX prefab, Queue<FX> pool, FXKind kind)
+    private FX GetInstance(GameObject prefab, Queue<FX> pool, FXKind kind)
     {
         FX fx;
 
@@ -126,7 +165,14 @@ public class FXManager : MonoBehaviour
         }
         else
         {
-            fx = Instantiate(prefab, transform);
+            GameObject instance = Instantiate(prefab, transform);
+            fx = instance.GetComponent<FX>();
+            if (fx == null)
+            {
+                Destroy(instance);
+                return null;
+            }
+
             fx.gameObject.SetActive(false);
         }
 

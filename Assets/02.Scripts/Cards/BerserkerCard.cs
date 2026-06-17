@@ -16,8 +16,12 @@ public class BerserkerCard : BaseCard
             return;
         }
 
-        AttackWithCounter(target, GetAttackDamage());
+        target.TakeDamage(GetAttackDamage(), this);
         MarkAsActed();
+    }
+
+    public override void ReflectDamage(BaseCard target, int targetHpBeforeDamage)
+    {
     }
 
     public override bool CanUseSkill => true;
@@ -34,13 +38,9 @@ public class BerserkerCard : BaseCard
             return;
         }
 
-        AttackWithCounter(target, GetAttackDamage() + 2);
+        target.TakeDamage(GetAttackDamage() + 2, this);
         TakeDamage(1, this);
         MarkAsActed();
     }
 
-    public override void Destroy()
-    {
-        Object.Destroy(gameObject);
-    }
 }
