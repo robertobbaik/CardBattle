@@ -262,6 +262,11 @@ public class ExcelDataImporterWindow : EditorWindow
                 builder.AppendLine("        return NormalizeLanguageCode(languageCode) == \"ko\" ? koreanDescription : englishDescription;");
                 builder.AppendLine("    }");
                 builder.AppendLine();
+                builder.AppendLine("    public string GetLogicDescription(string languageCode)");
+                builder.AppendLine("    {");
+                builder.AppendLine("        return NormalizeLanguageCode(languageCode) == \"ko\" ? koreanLogicDescription : englishLogicDescription;");
+                builder.AppendLine("    }");
+                builder.AppendLine();
                 builder.AppendLine("    private static string NormalizeLanguageCode(string languageCode)");
                 builder.AppendLine("    {");
                 builder.AppendLine("        return string.Equals(languageCode, \"ko\", StringComparison.OrdinalIgnoreCase) ? \"ko\" : \"en\";");

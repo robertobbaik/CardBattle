@@ -12,6 +12,10 @@ public class MainScreen : BaseScreen
         _gameStartButton.onClick.AddListener(OnClickGameStart);
     }
 
+    public override void Initialize()
+    {
+    }
+
     private void OnDestroy()
     {
         _gameStartButton.onClick.RemoveListener(OnClickGameStart);

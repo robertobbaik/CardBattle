@@ -64,6 +64,11 @@ public class DataManager : MonoBehaviour
         return GetCardTextData(cardTextKey).GetDescription(LanguageCode);
     }
 
+    public string GetCardLogicDescription(int cardTextKey)
+    {
+        return GetCardTextData(cardTextKey).GetLogicDescription(LanguageCode);
+    }
+
     private void LoadCardIcons()
     {
         _cardIconByType = new Dictionary<CardType, Sprite>();

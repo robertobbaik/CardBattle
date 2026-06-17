@@ -37,6 +37,49 @@ public class UserInfoManager : MonoBehaviour
         _currentDec = currentDecData.cardIds;
     }
 
+    public void SetCurrentDecCard(int index, int cardId)
+    {
+        if (index < 0 || index >= _currentDec.Count)
+        {
+            return;
+        }
+
+        int duplicateIndex = GetCurrentDecIndex(cardId);
+        if (duplicateIndex >= 0)
+        {
+            int currentCardId = _currentDec[index];
+            _currentDec[index] = cardId;
+            _currentDec[duplicateIndex] = currentCardId;
+            SaveCurrentDec();
+            return;
+        }
+
+        _currentDec[index] = cardId;
+        SaveCurrentDec();
+    }
+
+    private int GetCurrentDecIndex(int cardId)
+    {
+        for (int i = 0; i < _currentDec.Count; i++)
+        {
+            if (_currentDec[i] == cardId)
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private void SaveCurrentDec()
+    {
+        CurrentDecData currentDecData = new CurrentDecData();
+        currentDecData.cardIds = new List<int>(_currentDec);
+        string currentDecJson = JsonUtility.ToJson(currentDecData);
+        PlayerPrefs.SetString(GlobalString.CurrentDecKey, currentDecJson);
+        PlayerPrefs.Save();
+    }
+
     private class CurrentDecData
     {
         public List<int> cardIds = new List<int>();

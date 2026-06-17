@@ -6,6 +6,8 @@ public abstract class BaseScreen : MonoBehaviour
 
     public bool IsVisible => _canvasGroup.alpha > 0f;
 
+    public abstract void Initialize();
+
     public virtual void Show()
     {
         SetVisible(1f, true);

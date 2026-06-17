@@ -38,6 +38,8 @@ public class CardTextData
     public string koreanDescription;
     public string englishName;
     public string englishDescription;
+    public string koreanLogicDescription;
+    public string englishLogicDescription;
 
     [Serializable]
     public class Table
@@ -65,6 +67,11 @@ public class CardTextData
     public string GetDescription(string languageCode)
     {
         return NormalizeLanguageCode(languageCode) == GlobalString.LanguageKo ? koreanDescription : englishDescription;
+    }
+
+    public string GetLogicDescription(string languageCode)
+    {
+        return NormalizeLanguageCode(languageCode) == GlobalString.LanguageKo ? koreanLogicDescription : englishLogicDescription;
     }
 
     private static string NormalizeLanguageCode(string languageCode)

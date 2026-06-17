@@ -51,6 +51,13 @@ public class LobbyManager : MonoBehaviour
             button.onClick.AddListener(() => OnClickScreen(screenType));
         }
 
+        foreach (var screen in _screens)
+        {
+            screen.Value.gameObject.SetActive(true);
+            screen.Value.Initialize();
+        }
+
+        OnClickScreen(LobbyScreenType.Main);
         _isInitialized = true;
     }
 

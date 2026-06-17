@@ -5,70 +5,90 @@
       "koreanName": "일반 병사",
       "koreanDescription": "기본 능력치를 가진 표준 카드입니다.",
       "englishName": "Normal Soldier",
-      "englishDescription": "A standard card with balanced stats."
+      "englishDescription": "A standard card with balanced stats.",
+      "koreanLogicDescription": "공격 시 현재 체력만큼 피해를 주며, 공격받으면 피해 전 체력만큼 반격 피해를 받습니다.",
+      "englishLogicDescription": "Deals damage equal to current HP when attacking. When attacked, takes reflected damage equal to pre-hit HP."
     },
     {
       "cardTextKey": 2,
       "koreanName": "원거리 병사",
       "koreanDescription": "후방에서 안정적으로 공격하는 카드입니다.",
       "englishName": "Ranged Soldier",
-      "englishDescription": "A card that attacks reliably from the back line."
+      "englishDescription": "A card that attacks reliably from the back line.",
+      "koreanLogicDescription": "공격 시 현재 체력만큼 피해를 주고, 공격 후 반격 피해를 받지 않습니다.",
+      "englishLogicDescription": "Deals damage equal to current HP when attacking and takes no reflected damage after the attack."
     },
     {
       "cardTextKey": 3,
       "koreanName": "무쌍 병사",
       "koreanDescription": "강한 전투 지속력을 가진 핵심 공격 카드입니다.",
       "englishName": "Peerless Soldier",
-      "englishDescription": "A core attack card with strong combat pressure."
+      "englishDescription": "A core attack card with strong combat pressure.",
+      "koreanLogicDescription": "공격/스킬 시 대상에게 현재 체력만큼 피해를 주고, 열린 인접 적 하나에게 그 피해의 50%를 추가로 줍니다. 반격 피해는 피해 전 체력의 120%입니다.",
+      "englishLogicDescription": "Attack/skill deals current HP damage to the target, then deals 50% of that damage to one open adjacent enemy. Reflected damage is 120% of pre-hit HP."
     },
     {
       "cardTextKey": 4,
       "koreanName": "치유사",
       "koreanDescription": "아군의 체력을 회복시키는 지원 카드입니다.",
       "englishName": "Healer",
-      "englishDescription": "A support card that restores ally health."
+      "englishDescription": "A support card that restores ally health.",
+      "koreanLogicDescription": "턴 시작마다 자신을 제외한 앞쪽 아군 최대 3장을 1 회복합니다. 공격은 현재 체력만큼 피해를 주고, 반격 피해는 피해 전 체력만큼 받습니다.",
+      "englishLogicDescription": "At turn start, heals up to the first 3 allied cards other than itself by 1. Attack deals current HP damage; reflected damage equals pre-hit HP."
     },
     {
       "cardTextKey": 5,
       "koreanName": "수호자",
       "koreanDescription": "높은 체력으로 전열을 지키는 방어 카드입니다.",
       "englishName": "Guardian",
-      "englishDescription": "A defensive card that protects the front line with high health."
+      "englishDescription": "A defensive card that protects the front line with high health.",
+      "koreanLogicDescription": "공격 피해는 현재 체력의 80%(최소 1)입니다. 스킬 사용 시 이번 턴 받는 피해를 1 줄이고, 반격 피해는 피해 전 체력의 120%입니다.",
+      "englishLogicDescription": "Attack deals 80% of current HP as damage, minimum 1. Skill reduces incoming damage by 1 this turn. Reflected damage is 120% of pre-hit HP."
     },
     {
       "cardTextKey": 6,
       "koreanName": "암살자",
       "koreanDescription": "핵심 대상을 빠르게 제거하는 공격 카드입니다.",
       "englishName": "Assassin",
-      "englishDescription": "An attack card that quickly removes priority targets."
+      "englishDescription": "An attack card that quickly removes priority targets.",
+      "koreanLogicDescription": "스킬은 현재 체력만큼 피해를 주며, 대상 체력이 3 이하이면 피해가 2 증가합니다. 대상이 생존하면 피해 전 체력의 150%만큼 반격 피해를 받습니다.",
+      "englishLogicDescription": "Skill deals current HP damage and adds 2 damage if the target has 3 HP or less. If the target survives, reflected damage is 150% of pre-hit HP."
     },
     {
       "cardTextKey": 7,
       "koreanName": "광전사",
       "koreanDescription": "피해를 감수하고 강하게 압박하는 카드입니다.",
       "englishName": "Berserker",
-      "englishDescription": "A card that pressures enemies aggressively while taking risks."
+      "englishDescription": "A card that pressures enemies aggressively while taking risks.",
+      "koreanLogicDescription": "스킬은 현재 체력+2 피해를 주고 자신에게 1 피해를 줍니다. 공격 후 반격 피해를 받지 않습니다.",
+      "englishLogicDescription": "Skill deals current HP + 2 damage and deals 1 damage to itself. It takes no reflected damage after attacking."
     },
     {
       "cardTextKey": 8,
       "koreanName": "주술사",
       "koreanDescription": "특수 효과로 전투 흐름을 바꾸는 카드입니다.",
       "englishName": "Shaman",
-      "englishDescription": "A card that changes battle flow with special effects."
+      "englishDescription": "A card that changes battle flow with special effects.",
+      "koreanLogicDescription": "공격 피해는 현재 체력의 절반(최소 1)입니다. 필드에 등장하면 열린 적 전체의 체력을 2 낮추고, 스킬은 대상의 다음 공격 피해를 2 낮춥니다.",
+      "englishLogicDescription": "Attack deals half current HP as damage, minimum 1. On entering the field, reduces all open enemies' health by 2. Skill lowers the target's next attack damage by 2."
     },
     {
       "cardTextKey": 9,
       "koreanName": "지휘관",
       "koreanDescription": "아군의 전투 능력을 끌어올리는 카드입니다.",
       "englishName": "Commander",
-      "englishDescription": "A card that improves allied combat performance."
+      "englishDescription": "A card that improves allied combat performance.",
+      "koreanLogicDescription": "필드에 등장하면 열린 아군 전체의 체력을 2 올립니다. 스킬은 대상의 다음 공격 피해를 2 올리고, 반격 피해는 피해 전 체력만큼 받습니다.",
+      "englishLogicDescription": "On entering the field, adds 2 health to all open allies. Skill raises the target's next attack damage by 2. Reflected damage equals pre-hit HP."
     },
     {
       "cardTextKey": 10,
       "koreanName": "폭탄병",
       "koreanDescription": "폭발 피해로 적 진형을 무너뜨리는 카드입니다.",
       "englishName": "Bomber",
-      "englishDescription": "A card that disrupts enemy formations with explosive damage."
+      "englishDescription": "A card that disrupts enemy formations with explosive damage.",
+      "koreanLogicDescription": "스킬은 자신과 같은 진영의 열린 생존 카드 전체에게 현재 체력의 50%(최소 1) 피해를 줍니다. 사망 시 처치자에게 2 피해를 줍니다.",
+      "englishLogicDescription": "Skill deals 50% of current HP, minimum 1, to all open living cards on its own side. On death, deals 2 damage to the killer."
     }
   ]
 }

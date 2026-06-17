@@ -1,14 +1,10 @@
 using System;
 using System.Collections;
-using TMPro;
 using UnityEngine;
 
 public class TurnManager : MonoBehaviour
 {
     public static TurnManager Instance { get; private set; }
-
-    [SerializeField] private GameObject _turnPanel;
-    [SerializeField] private TextMeshProUGUI _turnText;
 
     private TurnOwner _currentTurnOwner = TurnOwner.None;
     private int _turnCount;
@@ -48,7 +44,6 @@ public class TurnManager : MonoBehaviour
         _currentTurnOwner = TurnOwner.None;
         _turnCount = 0;
         _isTransitioningTurn = false;
-        SetTurnPanelActive(false);
         Debug.Log("Turn Initialize");
     }
 
@@ -108,10 +103,8 @@ public class TurnManager : MonoBehaviour
         }
 
         Debug.Log(string.Format("Turn Transition Start - Current: {0}, Next: {1}", _currentTurnOwner, nextTurnOwner));
-        ShowTurnPanel(nextTurnOwner);
-        Debug.Log("Turn Transition Wait - 1s");
-        yield return new WaitForSeconds(1f);
-        SetTurnPanelActive(false);
+        Debug.Log("Turn Transition Wait - 2s");
+        yield return GameManager.Instance.ShowTurnTransition(nextTurnOwner);
         Debug.Log(string.Format("Turn Transition End - Next: {0}", nextTurnOwner));
 
         if (nextTurnOwner == TurnOwner.Enemy)
@@ -126,40 +119,5 @@ public class TurnManager : MonoBehaviour
         _isTransitioningTurn = false;
         _turnTransitionCoroutine = null;
         onTurnChangedComplete?.Invoke();
-    }
-
-    private void ShowTurnPanel(TurnOwner turnOwner)
-    {
-        if (_turnText != null)
-        {
-            _turnText.text = GetTurnText(turnOwner);
-        }
-
-        SetTurnPanelActive(true);
-    }
-
-    private void SetTurnPanelActive(bool isActive)
-    {
-        if (_turnPanel == null)
-        {
-            return;
-        }
-
-        _turnPanel.SetActive(isActive);
-    }
-
-    private static string GetTurnText(TurnOwner turnOwner)
-    {
-        if (turnOwner == TurnOwner.Player)
-        {
-            return "플레이어 턴";
-        }
-
-        if (turnOwner == TurnOwner.Enemy)
-        {
-            return "적 플레이어 턴";
-        }
-
-        return string.Empty;
     }
 }

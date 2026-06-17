@@ -2,17 +2,26 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
     private static readonly Color AttackTargetHighlightColor = new Color(1f, 0f, 0f, 1f);
+    private const float TurnPanelDuration = 2f;
+    private const float GameOverReturnDelay = 3f;
 
     public static GameManager Instance { get; private set; }
 
     [SerializeField] private StartPanel _startPanel;
     [SerializeField] private CardSelectPanel _selectPanel;
     [SerializeField] private ActionPanel _actionPanel;
-    [SerializeField] private GameOverPanel _gameOverPanel;
+    [SerializeField] private GameObject _turnPanel;
+    [SerializeField] private Image _yourTurn;
+    [SerializeField] private Image _enemyTurn;
+    [SerializeField] private GameObject _gameOverPanel;
+    [SerializeField] private Image _victory;
+    [SerializeField] private Image _draw;
+    [SerializeField] private Image _defeat;
 
     private SequenceState _sequenceState = SequenceState.None;
     private BaseCard _focusedActionCard;
@@ -35,6 +44,7 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         HideActionPanel();
+        HideTurnPanel();
         HideGameOverPanel();
         _battleEnded = false;
 
@@ -296,6 +306,13 @@ public class GameManager : MonoBehaviour
         return _sequenceState == SequenceState.Sequence;
     }
 
+    public IEnumerator ShowTurnTransition(TurnOwner turnOwner)
+    {
+        ShowTurnPanel(turnOwner);
+        yield return new WaitForSeconds(TurnPanelDuration);
+        HideTurnPanel();
+    }
+
     public void BeginEnemyActionSequence()
     {
         if (_battleEnded || TurnManager.Instance == null || EnemyController.Instance == null)
@@ -467,21 +484,21 @@ public class GameManager : MonoBehaviour
             return false;
         }
 
-        string result = "Draw";
+        BattleResult result = BattleResult.Draw;
         if (playerHasCards && !enemyHasCards)
         {
-            result = "Win";
+            result = BattleResult.Victory;
         }
         else if (!playerHasCards && enemyHasCards)
         {
-            result = "Lose";
+            result = BattleResult.Defeat;
         }
 
         BeginGameOver(result);
         return true;
     }
 
-    private void BeginGameOver(string result)
+    private void BeginGameOver(BattleResult result)
     {
         if (_battleEnded)
         {
@@ -501,7 +518,7 @@ public class GameManager : MonoBehaviour
         }
 
         Debug.Log(string.Format("GameOver - Result: {0}", result));
-        ShowGameOverPanel(GetGameOverText(result));
+        ShowGameOverPanel(result);
 
         if (_returnToLobbyCoroutine != null)
         {
@@ -513,7 +530,7 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator ReturnToLobbyCoroutine()
     {
-        yield return new WaitForSeconds(1.25f);
+        yield return new WaitForSeconds(GameOverReturnDelay);
 
         if (SceneManager.Instance != null)
         {
@@ -521,38 +538,64 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void ShowGameOverPanel(string resultText)
+    private void ShowTurnPanel(TurnOwner turnOwner)
     {
-        if (_gameOverPanel == null)
-        {
-            return;
-        }
+        SetImageActive(_yourTurn, turnOwner == TurnOwner.Player);
+        SetImageActive(_enemyTurn, turnOwner == TurnOwner.Enemy);
 
-        _gameOverPanel.Show(resultText);
+        if (_turnPanel != null)
+        {
+            _turnPanel.SetActive(true);
+        }
+    }
+
+    private void HideTurnPanel()
+    {
+        SetImageActive(_yourTurn, false);
+        SetImageActive(_enemyTurn, false);
+
+        if (_turnPanel != null)
+        {
+            _turnPanel.SetActive(false);
+        }
+    }
+
+    private void ShowGameOverPanel(BattleResult result)
+    {
+        SetImageActive(_victory, result == BattleResult.Victory);
+        SetImageActive(_draw, result == BattleResult.Draw);
+        SetImageActive(_defeat, result == BattleResult.Defeat);
+
+        if (_gameOverPanel != null)
+        {
+            _gameOverPanel.SetActive(true);
+        }
     }
 
     private void HideGameOverPanel()
     {
-        if (_gameOverPanel == null)
-        {
-            return;
-        }
+        SetImageActive(_victory, false);
+        SetImageActive(_draw, false);
+        SetImageActive(_defeat, false);
 
-        _gameOverPanel.Hide();
+        if (_gameOverPanel != null)
+        {
+            _gameOverPanel.SetActive(false);
+        }
     }
 
-    private static string GetGameOverText(string result)
+    private static void SetImageActive(Image image, bool isActive)
     {
-        if (result == "Win")
+        if (image != null)
         {
-            return "승";
+            image.gameObject.SetActive(isActive);
         }
+    }
 
-        if (result == "Lose")
-        {
-            return "패";
-        }
-
-        return "무";
+    private enum BattleResult
+    {
+        Victory,
+        Draw,
+        Defeat
     }
 }
