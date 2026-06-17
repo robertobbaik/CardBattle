@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class FX : MonoBehaviour
@@ -8,7 +9,8 @@ public class FX : MonoBehaviour
     [SerializeField] private float _fallbackDuration = 1f;
 
     private FXManager _owner;
-    private bool _isHeal;
+    private FXKind _kind;
+    private Action _onComplete;
 
     private void Awake()
     {
@@ -18,10 +20,10 @@ public class FX : MonoBehaviour
         }
     }
 
-    public void Initialize(FXManager owner, bool isHeal)
+    public void Initialize(FXManager owner, FXKind kind)
     {
         _owner = owner;
-        _isHeal = isHeal;
+        _kind = kind;
 
         if (_animator == null)
         {
@@ -29,17 +31,37 @@ public class FX : MonoBehaviour
         }
     }
 
-    public void Play(Transform parent, Vector3 localPosition)
+    public void PlayLocal(Transform parent, Vector3 localPosition, Quaternion localRotation, Action onComplete)
+    {
+        PlayInternal(parent, localPosition, localRotation, false, onComplete);
+    }
+
+    public void PlayWorld(Transform parent, Vector3 worldPosition, Quaternion worldRotation, Action onComplete)
+    {
+        PlayInternal(parent, worldPosition, worldRotation, true, onComplete);
+    }
+
+    private void PlayInternal(Transform parent, Vector3 position, Quaternion rotation, bool useWorldSpace, Action onComplete)
     {
         CancelInvoke(nameof(ReturnToPool));
+        _onComplete = onComplete;
 
         if (parent != null)
         {
             transform.SetParent(parent, false);
         }
 
-        transform.localPosition = localPosition;
-        transform.localRotation = Quaternion.identity;
+        if (useWorldSpace)
+        {
+            transform.position = position;
+            transform.rotation = rotation;
+        }
+        else
+        {
+            transform.localPosition = position;
+            transform.localRotation = rotation;
+        }
+
         gameObject.SetActive(true);
 
         if (_animator != null)
@@ -99,12 +121,17 @@ public class FX : MonoBehaviour
 
     private void ReturnToPool()
     {
+        Action onComplete = _onComplete;
+        _onComplete = null;
+
         if (_owner == null)
         {
+            onComplete?.Invoke();
             return;
         }
 
-        _owner.Recycle(this, _isHeal);
+        _owner.Recycle(this, _kind);
+        onComplete?.Invoke();
     }
 
     private void OnDisable()

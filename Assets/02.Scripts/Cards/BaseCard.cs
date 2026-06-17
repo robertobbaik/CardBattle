@@ -29,6 +29,8 @@ public abstract class BaseCard : MonoBehaviour
     private Image _highlightImage;
     private int _currentHp;
     private int _slotIndex = -1;
+    private int _nextAttackModifier;
+    private bool _hasActedThisTurn;
     private Sequence _flipSequence;
     private Sequence _damageShakeSequence;
     private Color _defaultHighlightColor = Color.white;
@@ -51,6 +53,11 @@ public abstract class BaseCard : MonoBehaviour
     public int AttackPower => _currentHp;
     public int SlotIndex => _slotIndex;
     public int MaxHp => maxHp;
+    public bool HasActedThisTurn => _hasActedThisTurn;
+
+    public virtual bool CanAttack => _currentHp > 0 && !_hasActedThisTurn;
+
+    public virtual bool CanUseSkill => false;
 
     public abstract CardType CardType { get; }
 
@@ -102,6 +109,24 @@ public abstract class BaseCard : MonoBehaviour
         _slotIndex = slotIndex;
     }
 
+    public virtual void ResetTurnAction()
+    {
+        _hasActedThisTurn = false;
+    }
+
+    public void MarkAsActed()
+    {
+        _hasActedThisTurn = true;
+    }
+
+    public virtual void OnTurnStart()
+    {
+    }
+
+    public virtual void UseSkill(BaseCard target = null)
+    {
+    }
+
     public void Initialize()
     {
         CardData cardData = DataManager.Instance.CardDataById[cardId];
@@ -114,6 +139,8 @@ public abstract class BaseCard : MonoBehaviour
         uniqueValue = new List<float>(cardData.uniqueValue);
 
         _currentHp = startHp;
+        _nextAttackModifier = 0;
+        _hasActedThisTurn = false;
         _iconImage.sprite = DataManager.Instance.GetCardIcon(cardType);
         _nameText.text = cardName;
         _descriptionText.text = cardDescription;
@@ -132,6 +159,87 @@ public abstract class BaseCard : MonoBehaviour
 
         Debug.Log($"{name} reflect attack. counter owner: {_owner}, attacker owner: {attacker.Owner}");
         Attack(attacker);
+    }
+
+    protected int GetAttackDamage()
+    {
+        int attackDamage = _currentHp + _nextAttackModifier;
+        _nextAttackModifier = 0;
+
+        if (attackDamage < 1)
+        {
+            attackDamage = 1;
+        }
+
+        return attackDamage;
+    }
+
+    protected void AttackWithCounter(BaseCard target, int damage)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        target.TakeDamage(damage, this);
+
+        if (!ShouldReceiveCounter(target))
+        {
+            return;
+        }
+
+        int counterDamage = target.Hp;
+        if (counterDamage <= 0)
+        {
+            return;
+        }
+
+        TakeDamage(counterDamage, target);
+    }
+
+    protected BaseCard GetRandomAdjacentEnemyCard(BaseCard target)
+    {
+        if (target == null)
+        {
+            return null;
+        }
+
+        if (target.Owner == CardOwner.Player)
+        {
+            if (PlayerController.Instance == null)
+            {
+                return null;
+            }
+
+            return PlayerController.Instance.GetRandomAdjacentAliveCard(target.SlotIndex);
+        }
+
+        if (target.Owner == CardOwner.Enemy)
+        {
+            if (EnemyController.Instance == null)
+            {
+                return null;
+            }
+
+            return EnemyController.Instance.GetRandomAdjacentAliveCard(target.SlotIndex);
+        }
+
+        return null;
+    }
+
+    protected virtual bool ShouldReceiveCounter(BaseCard target)
+    {
+        return true;
+    }
+
+    public void ApplyInspired()
+    {
+        _nextAttackModifier += 2;
+    }
+
+    public void ApplyWeaken()
+    {
+        _nextAttackModifier -= 2;
     }
 
     public void SetHighlightActive(bool isActive)
@@ -199,11 +307,17 @@ public abstract class BaseCard : MonoBehaviour
         _front.SetActive(true);
     }
 
-    public void TakeDamage(int damage)
+    public void TakeDamage(int damage, BaseCard source = null)
     {
         if (damage <= 0)
         {
             return;
+        }
+
+        damage -= GetIncomingDamageReduction();
+        if (damage < 1)
+        {
+            damage = 1;
         }
 
         PlayDamageShake();
@@ -213,6 +327,7 @@ public abstract class BaseCard : MonoBehaviour
 
         if (_currentHp <= 0)
         {
+            OnDeath(source);
             NotifyDestroyed();
             Destroy();
         }
@@ -272,6 +387,21 @@ public abstract class BaseCard : MonoBehaviour
         FXManager.Instance.PlayHealFX(transform, Vector3.zero);
     }
 
+    private int GetIncomingDamageReduction()
+    {
+        if (_owner == CardOwner.Player && PlayerController.Instance != null)
+        {
+            return PlayerController.Instance.GetGuardDamageReduction();
+        }
+
+        if (_owner == CardOwner.Enemy && EnemyController.Instance != null)
+        {
+            return EnemyController.Instance.GetGuardDamageReduction();
+        }
+
+        return 0;
+    }
+
     private void NotifyDestroyed()
     {
         if (_owner == CardOwner.Player)
@@ -288,6 +418,10 @@ public abstract class BaseCard : MonoBehaviour
         {
             EnemyController.Instance.OnCardDestroyed(this);
         }
+    }
+
+    protected virtual void OnDeath(BaseCard killer)
+    {
     }
 
     private void OnClickCard()

@@ -15,10 +15,12 @@ public class PlayerController : MonoBehaviour
     private List<BaseCard> _cards = new List<BaseCard>(TotalCardCount);
     private Queue<BaseCard> _waitingCardQueue = new Queue<BaseCard>();
     private Coroutine _openCardsCoroutine;
+    private int _guardDamageReduction;
 
     public List<int> CurrentDec => _currentDec;
     public List<BaseCard> Cards => _cards;
     public Queue<BaseCard> WaitingCardQueue => _waitingCardQueue;
+    public int GuardDamageReduction => _guardDamageReduction;
 
     private void Awake()
     {
@@ -57,6 +59,60 @@ public class PlayerController : MonoBehaviour
         }
 
         StartOpenCards();
+    }
+
+    public void OnTurnStart()
+    {
+        ClearGuard();
+
+        for (int i = 0; i < InitialOpenCardCount; i++)
+        {
+            if (i >= _cards.Count)
+            {
+                break;
+            }
+
+            BaseCard card = _cards[i];
+            if (card == null)
+            {
+                continue;
+            }
+
+            card.ResetTurnAction();
+            card.OnTurnStart();
+        }
+    }
+
+    public void ApplyGuard()
+    {
+        _guardDamageReduction = 1;
+    }
+
+    public int GetGuardDamageReduction()
+    {
+        return _guardDamageReduction;
+    }
+
+    public BaseCard GetCardAtSlot(int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= _cards.Count)
+        {
+            return null;
+        }
+
+        return _cards[slotIndex];
+    }
+
+    public BaseCard GetRandomAdjacentAliveCard(int slotIndex)
+    {
+        List<BaseCard> candidates = GetAdjacentAliveCards(slotIndex);
+        if (candidates.Count == 0)
+        {
+            return null;
+        }
+
+        int randomIndex = Random.Range(0, candidates.Count);
+        return candidates[randomIndex];
     }
 
     private BaseCard CreateCard(int cardId, int cardIndex)
@@ -164,6 +220,60 @@ public class PlayerController : MonoBehaviour
         nextCard.transform.localRotation = Quaternion.identity;
         nextCard.SetSlotIndex(slotIndex);
         nextCard.FlipToFront();
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.CheckBattleResult();
+        }
+    }
+
+    private void ClearGuard()
+    {
+        _guardDamageReduction = 0;
+    }
+
+    private List<BaseCard> GetAdjacentAliveCards(int slotIndex)
+    {
+        List<BaseCard> candidates = new List<BaseCard>(2);
+
+        AddAdjacentCandidate(candidates, slotIndex - 1);
+        AddAdjacentCandidate(candidates, slotIndex + 1);
+
+        return candidates;
+    }
+
+    private void AddAdjacentCandidate(List<BaseCard> candidates, int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= InitialOpenCardCount || slotIndex >= _cards.Count)
+        {
+            return;
+        }
+
+        BaseCard card = _cards[slotIndex];
+        if (card == null)
+        {
+            return;
+        }
+
+        candidates.Add(card);
+    }
+
+    public bool HasAliveBattlefieldCards()
+    {
+        for (int i = 0; i < InitialOpenCardCount; i++)
+        {
+            if (i >= _cards.Count)
+            {
+                break;
+            }
+
+            if (_cards[i] != null)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void OnDestroy()

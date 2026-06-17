@@ -50,3 +50,17 @@ public enum EnemyState
     Act,
     End
 }
+
+public enum SequenceState
+{
+    None,
+    Sequence
+}
+
+public enum FXKind
+{
+    Damage,
+    Heal,
+    Lining,
+    DoubleSlash
+}

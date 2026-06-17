@@ -72,6 +72,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7cde1f2f38d64e52949a1f1ed7f0e3a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FX
+  _animator: {fileID: 0}
+  _fallbackDuration: 1
 --- !u!1 &6911610789712660764
 GameObject:
   m_ObjectHideFlags: 0
@@ -107,7 +109,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 100, y: 10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3968278544818146264
 CanvasRenderer:

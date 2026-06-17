@@ -6,7 +6,23 @@ public class RangedCard : BaseCard
 
     public override void Attack(BaseCard target)
     {
-        target.TakeDamage(AttackPower);
+        if (target == null)
+        {
+            return;
+        }
+
+        if (!CanAttack)
+        {
+            return;
+        }
+
+        target.TakeDamage(GetAttackDamage(), this);
+        MarkAsActed();
+    }
+
+    protected override bool ShouldReceiveCounter(BaseCard target)
+    {
+        return false;
     }
 
     public override void Destroy()

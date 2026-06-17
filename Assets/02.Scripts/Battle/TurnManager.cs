@@ -33,21 +33,36 @@ public class TurnManager : MonoBehaviour
     {
         _currentTurnOwner = TurnOwner.None;
         _turnCount = 0;
+        Debug.Log("Turn Initialize");
     }
 
     public void StartPlayerTurn()
     {
         _currentTurnOwner = TurnOwner.Player;
         _turnCount++;
+        Debug.Log(string.Format("Turn Start - Player, TurnCount: {0}", _turnCount));
+
+        if (PlayerController.Instance != null)
+        {
+            PlayerController.Instance.OnTurnStart();
+        }
     }
 
     public void StartEnemyTurn()
     {
         _currentTurnOwner = TurnOwner.Enemy;
+        Debug.Log("Turn Start - Enemy");
+
+        if (EnemyController.Instance != null)
+        {
+            EnemyController.Instance.OnTurnStart();
+        }
     }
 
     public void EndTurn()
     {
+        Debug.Log(string.Format("Turn End - Current: {0}", _currentTurnOwner));
+
         if (_currentTurnOwner == TurnOwner.Player)
         {
             StartEnemyTurn();

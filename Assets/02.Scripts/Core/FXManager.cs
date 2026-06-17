@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 public class FXManager : MonoBehaviour
@@ -7,9 +8,13 @@ public class FXManager : MonoBehaviour
 
     [SerializeField] private FX _damageFxPrefab;
     [SerializeField] private FX _healFxPrefab;
+    [SerializeField] private FX _liningFxPrefab;
+    [SerializeField] private FX _doubleSlashFxPrefab;
 
     private readonly Queue<FX> _damagePool = new Queue<FX>();
     private readonly Queue<FX> _healPool = new Queue<FX>();
+    private readonly Queue<FX> _liningPool = new Queue<FX>();
+    private readonly Queue<FX> _doubleSlashPool = new Queue<FX>();
 
     private void Awake()
     {
@@ -32,15 +37,25 @@ public class FXManager : MonoBehaviour
 
     public FX PlayDamageFX(Transform parent, Vector3 localPosition)
     {
-        return Play(_damageFxPrefab, _damagePool, false, parent, localPosition);
+        return PlayLocal(_damageFxPrefab, _damagePool, FXKind.Damage, parent, localPosition, Quaternion.identity, null);
     }
 
     public FX PlayHealFX(Transform parent, Vector3 localPosition)
     {
-        return Play(_healFxPrefab, _healPool, true, parent, localPosition);
+        return PlayLocal(_healFxPrefab, _healPool, FXKind.Heal, parent, localPosition, Quaternion.identity, null);
     }
 
-    public void Recycle(FX fx, bool isHeal)
+    public FX PlayLiningFX(Transform parent, Vector3 worldPosition, Quaternion worldRotation, Action onComplete)
+    {
+        return PlayWorld(_liningFxPrefab, _liningPool, FXKind.Lining, parent, worldPosition, worldRotation, onComplete);
+    }
+
+    public FX PlayDoubleSlashFX(Transform parent, Vector3 worldPosition, Quaternion worldRotation, Action onComplete)
+    {
+        return PlayWorld(_doubleSlashFxPrefab, _doubleSlashPool, FXKind.DoubleSlash, parent, worldPosition, worldRotation, onComplete);
+    }
+
+    public void Recycle(FX fx, FXKind kind)
     {
         if (fx == null)
         {
@@ -50,33 +65,58 @@ public class FXManager : MonoBehaviour
         fx.transform.SetParent(transform, false);
         fx.gameObject.SetActive(false);
 
-        if (isHeal)
+        switch (kind)
         {
-            _healPool.Enqueue(fx);
-            return;
+            case FXKind.Damage:
+                _damagePool.Enqueue(fx);
+                return;
+            case FXKind.Heal:
+                _healPool.Enqueue(fx);
+                return;
+            case FXKind.Lining:
+                _liningPool.Enqueue(fx);
+                return;
+            case FXKind.DoubleSlash:
+                _doubleSlashPool.Enqueue(fx);
+                return;
         }
-
-        _damagePool.Enqueue(fx);
     }
 
-    private FX Play(FX prefab, Queue<FX> pool, bool isHeal, Transform parent, Vector3 localPosition)
+    private FX PlayLocal(FX prefab, Queue<FX> pool, FXKind kind, Transform parent, Vector3 localPosition, Quaternion localRotation, Action onComplete)
     {
         if (prefab == null)
         {
             return null;
         }
 
-        FX fx = GetInstance(prefab, pool, isHeal);
+        FX fx = GetInstance(prefab, pool, kind);
         if (fx == null)
         {
             return null;
         }
 
-        fx.Play(parent == null ? transform : parent, localPosition);
+        fx.PlayLocal(parent == null ? transform : parent, localPosition, localRotation, onComplete);
         return fx;
     }
 
-    private FX GetInstance(FX prefab, Queue<FX> pool, bool isHeal)
+    private FX PlayWorld(FX prefab, Queue<FX> pool, FXKind kind, Transform parent, Vector3 worldPosition, Quaternion worldRotation, Action onComplete)
+    {
+        if (prefab == null)
+        {
+            return null;
+        }
+
+        FX fx = GetInstance(prefab, pool, kind);
+        if (fx == null)
+        {
+            return null;
+        }
+
+        fx.PlayWorld(parent == null ? transform : parent, worldPosition, worldRotation, onComplete);
+        return fx;
+    }
+
+    private FX GetInstance(FX prefab, Queue<FX> pool, FXKind kind)
     {
         FX fx;
 
@@ -90,7 +130,7 @@ public class FXManager : MonoBehaviour
             fx.gameObject.SetActive(false);
         }
 
-        fx.Initialize(this, isHeal);
+        fx.Initialize(this, kind);
 
         return fx;
     }

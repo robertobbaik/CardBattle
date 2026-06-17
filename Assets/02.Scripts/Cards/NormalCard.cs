@@ -11,13 +11,13 @@ public class NormalCard : BaseCard
             return;
         }
 
-        target.TakeDamage(AttackPower);
-
-        int selfDamage = Mathf.Max(target.Hp, 0);
-        if (selfDamage > 0)
+        if (!CanAttack)
         {
-            TakeDamage(selfDamage);
+            return;
         }
+
+        AttackWithCounter(target, GetAttackDamage());
+        MarkAsActed();
     }
 
     public override void Destroy()

@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2247187245250250646}
   - component: {fileID: 4615559817911972841}
+  - component: {fileID: 4615559817911972842}
   m_Layer: 5
   m_Name: FX - DoubleSlash
   m_TagString: Untagged
@@ -59,6 +60,18 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &4615559817911972842
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4204189901577859809}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7cde1f2f38d64e52949a1f1ed7f0e3a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FX
 --- !u!1 &6457811085226716901
 GameObject:
   m_ObjectHideFlags: 0

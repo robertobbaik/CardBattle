@@ -17,9 +17,12 @@ public class EnemyController : MonoBehaviour
     private List<BaseCard> _cards = new List<BaseCard>(EnemyDecCardCount);
     private Queue<BaseCard> _waitingCardQueue = new Queue<BaseCard>(EnemyDecCardCount);
     private Coroutine _openCardsCoroutine;
+    private Coroutine _actionSequenceCoroutine;
+    private int _guardDamageReduction;
 
     public EnemyState CurrentState => _currentState;
     public List<BaseCard> Cards => _cards;
+    public int GuardDamageReduction => _guardDamageReduction;
 
     private void Awake()
     {
@@ -41,22 +44,21 @@ public class EnemyController : MonoBehaviour
     {
         if (_currentDec == null || _currentDec.Count == 0)
         {
-            _currentDec = CreateRandomDec();
+            _currentDec = new List<int>(UserInfoManager.Instance.CurrentDec);
         }
 
         return _currentDec;
     }
 
-    public void CreateCardsInRandomOrder(Action onComplete)
+    public void CreateCards(Action onComplete)
     {
-        List<int> randomOrderedDec = new List<int>(GetDec());
-        ShuffleDec(randomOrderedDec);
+        List<int> orderedDec = new List<int>(GetDec());
 
         _cards.Clear();
         _waitingCardQueue.Clear();
 
         int cardIndex = 0;
-        foreach (int cardId in randomOrderedDec)
+        foreach (int cardId in orderedDec)
         {
             BaseCard card = CreateCard(cardId, cardIndex);
             if (card != null)
@@ -88,6 +90,11 @@ public class EnemyController : MonoBehaviour
 
         for (int i = 0; i < InitialOpenCardCount; i++)
         {
+            if (i >= _cards.Count)
+            {
+                break;
+            }
+
             if (_cards[i] == null)
             {
                 continue;
@@ -97,6 +104,60 @@ public class EnemyController : MonoBehaviour
         }
 
         return targetCards;
+    }
+
+    public void OnTurnStart()
+    {
+        ClearGuard();
+
+        for (int i = 0; i < InitialOpenCardCount; i++)
+        {
+            if (i >= _cards.Count)
+            {
+                break;
+            }
+
+            BaseCard card = _cards[i];
+            if (card == null)
+            {
+                continue;
+            }
+
+            card.ResetTurnAction();
+            card.OnTurnStart();
+        }
+    }
+
+    public void ApplyGuard()
+    {
+        _guardDamageReduction = 1;
+    }
+
+    public int GetGuardDamageReduction()
+    {
+        return _guardDamageReduction;
+    }
+
+    public BaseCard GetCardAtSlot(int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= _cards.Count)
+        {
+            return null;
+        }
+
+        return _cards[slotIndex];
+    }
+
+    public BaseCard GetRandomAdjacentAliveCard(int slotIndex)
+    {
+        List<BaseCard> candidates = GetAdjacentAliveCards(slotIndex);
+        if (candidates.Count == 0)
+        {
+            return null;
+        }
+
+        int randomIndex = UnityEngine.Random.Range(0, candidates.Count);
+        return candidates[randomIndex];
     }
 
     public void OnCardDestroyed(BaseCard destroyedCard)
@@ -118,6 +179,16 @@ public class EnemyController : MonoBehaviour
         }
 
         FillEmptySlot(slotIndex);
+    }
+
+    public void StartActionSequence(Action onComplete)
+    {
+        if (_actionSequenceCoroutine != null)
+        {
+            StopCoroutine(_actionSequenceCoroutine);
+        }
+
+        _actionSequenceCoroutine = StartCoroutine(ActionSequence(onComplete));
     }
 
     private void Update()
@@ -155,51 +226,88 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    private List<int> CreateRandomDec()
+    private IEnumerator ActionSequence(Action onComplete)
     {
-        List<CardData> cardDataList = new List<CardData>(DataManager.Instance.CardDataById.Values);
-        HashSet<int> selectedCardTypes = new HashSet<int>();
-        List<int> dec = new List<int>(EnemyDecCardCount);
+        ChangeState(EnemyState.Think);
+        float thinkDuration = UnityEngine.Random.Range(1f, 2f);
+        yield return new WaitForSeconds(thinkDuration);
 
-        Shuffle(cardDataList);
+        ChangeState(EnemyState.Act);
 
-        foreach (CardData cardData in cardDataList)
+        BaseCard attacker = GetActionCard();
+        BaseCard target = GetPlayerTargetCard();
+
+        if (attacker != null && target != null)
         {
-            if (!selectedCardTypes.Add(cardData.cardType))
+            bool attackSequenceComplete = false;
+
+            if (GameManager.Instance != null)
             {
-                continue;
+                GameManager.Instance.BeginEnemyAttackSequence(attacker, target, delegate
+                {
+                    attackSequenceComplete = true;
+                });
+            }
+            else
+            {
+                attacker.Attack(target);
+                attackSequenceComplete = true;
             }
 
-            dec.Add(cardData.cardId);
-            if (dec.Count >= EnemyDecCardCount)
+            while (!attackSequenceComplete)
+            {
+                yield return null;
+            }
+        }
+
+        ChangeState(EnemyState.End);
+        _actionSequenceCoroutine = null;
+        ChangeState(EnemyState.Idle);
+        onComplete?.Invoke();
+    }
+
+    private BaseCard GetActionCard()
+    {
+        for (int i = 0; i < InitialOpenCardCount; i++)
+        {
+            if (i >= _cards.Count)
             {
                 break;
             }
+
+            BaseCard card = _cards[i];
+            if (card != null)
+            {
+                return card;
+            }
         }
 
-        return dec;
+        return null;
     }
 
-    private void Shuffle(List<CardData> cardDataList)
+    private BaseCard GetPlayerTargetCard()
     {
-        for (int i = 0; i < cardDataList.Count - 1; i++)
+        if (PlayerController.Instance == null)
         {
-            int randomIndex = UnityEngine.Random.Range(i, cardDataList.Count);
-            CardData currentCardData = cardDataList[i];
-            cardDataList[i] = cardDataList[randomIndex];
-            cardDataList[randomIndex] = currentCardData;
+            return null;
         }
-    }
 
-    private void ShuffleDec(List<int> dec)
-    {
-        for (int i = 0; i < dec.Count - 1; i++)
+        List<BaseCard> playerCards = PlayerController.Instance.Cards;
+        for (int i = 0; i < InitialOpenCardCount; i++)
         {
-            int randomIndex = UnityEngine.Random.Range(i, dec.Count);
-            int currentCardId = dec[i];
-            dec[i] = dec[randomIndex];
-            dec[randomIndex] = currentCardId;
+            if (i >= playerCards.Count)
+            {
+                break;
+            }
+
+            BaseCard card = playerCards[i];
+            if (card != null)
+            {
+                return card;
+            }
         }
+
+        return null;
     }
 
     private BaseCard CreateCard(int cardId, int cardIndex)
@@ -287,6 +395,11 @@ public class EnemyController : MonoBehaviour
         nextCard.transform.localRotation = Quaternion.identity;
         nextCard.SetSlotIndex(slotIndex);
         nextCard.FlipToFront();
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.CheckBattleResult();
+        }
     }
 
     private void OnDestroy()
@@ -297,9 +410,64 @@ public class EnemyController : MonoBehaviour
             _openCardsCoroutine = null;
         }
 
+        if (_actionSequenceCoroutine != null)
+        {
+            StopCoroutine(_actionSequenceCoroutine);
+            _actionSequenceCoroutine = null;
+        }
+
         if (Instance == this)
         {
             Instance = null;
         }
+    }
+
+    private void ClearGuard()
+    {
+        _guardDamageReduction = 0;
+    }
+
+    private List<BaseCard> GetAdjacentAliveCards(int slotIndex)
+    {
+        List<BaseCard> candidates = new List<BaseCard>(2);
+
+        AddAdjacentCandidate(candidates, slotIndex - 1);
+        AddAdjacentCandidate(candidates, slotIndex + 1);
+
+        return candidates;
+    }
+
+    private void AddAdjacentCandidate(List<BaseCard> candidates, int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= InitialOpenCardCount || slotIndex >= _cards.Count)
+        {
+            return;
+        }
+
+        BaseCard card = _cards[slotIndex];
+        if (card == null)
+        {
+            return;
+        }
+
+        candidates.Add(card);
+    }
+
+    public bool HasAliveBattlefieldCards()
+    {
+        for (int i = 0; i < InitialOpenCardCount; i++)
+        {
+            if (i >= _cards.Count)
+            {
+                break;
+            }
+
+            if (_cards[i] != null)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
