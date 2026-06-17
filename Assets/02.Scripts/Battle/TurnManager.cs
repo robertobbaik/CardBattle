@@ -13,6 +13,7 @@ public class TurnManager : MonoBehaviour
 
     public TurnOwner CurrentTurnOwner => _currentTurnOwner;
     public int TurnCount => _turnCount;
+    public bool IsTransitioningTurn => _isTransitioningTurn;
 
     private void Awake()
     {
@@ -118,6 +119,12 @@ public class TurnManager : MonoBehaviour
 
         _isTransitioningTurn = false;
         _turnTransitionCoroutine = null;
+
+        if (nextTurnOwner == TurnOwner.Enemy && GameManager.Instance != null)
+        {
+            GameManager.Instance.BeginEnemyActionSequence();
+        }
+
         onTurnChangedComplete?.Invoke();
     }
 }

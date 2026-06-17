@@ -282,6 +282,20 @@ public class PlayerController : MonoBehaviour
         return false;
     }
 
+    public bool HasActiveBattlefieldCardSequences()
+    {
+        for (int i = 0; i < _cards.Count; i++)
+        {
+            BaseCard card = _cards[i];
+            if (card != null && card.IsSequencePlaying)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void OnDestroy()
     {
         if (Instance == this)

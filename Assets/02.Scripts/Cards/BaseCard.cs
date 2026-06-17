@@ -66,6 +66,7 @@ public abstract class BaseCard : MonoBehaviour
     public bool IsOpen => _isOpen;
     public bool IsOpening => _isOpening;
     public bool IsAlive => _isAlive;
+    public bool IsSequencePlaying => _isDestroying || _isOpening || IsTweenPlaying(_flipSequence) || IsTweenPlaying(_damageShakeSequence) || IsTweenPlaying(_destroyShakeSequence);
 
     public virtual bool CanAttack => _isAlive && _currentHp > 0 && !_hasActedThisTurn && !_isDestroying;
 
@@ -274,6 +275,7 @@ public abstract class BaseCard : MonoBehaviour
         _flipSequence.Append(transform.DOScaleX(0f, halfDuration));
         _flipSequence.AppendCallback(SwitchToFront);
         _flipSequence.Append(transform.DOScaleX(1f, halfDuration));
+        _flipSequence.OnComplete(CompleteFlipToFront);
     }
 
     public void SetBackState()
@@ -292,8 +294,12 @@ public abstract class BaseCard : MonoBehaviour
         _back.SetActive(false);
         _front.SetActive(true);
         _isOpen = true;
-        _isOpening = false;
         EnterFieldOnce();
+    }
+
+    private void CompleteFlipToFront()
+    {
+        _isOpening = false;
     }
 
     private void EnterFieldOnce()
@@ -630,5 +636,10 @@ public abstract class BaseCard : MonoBehaviour
         _flipSequence?.Kill();
         _damageShakeSequence?.Kill();
         _destroyShakeSequence?.Kill();
+    }
+
+    private static bool IsTweenPlaying(Tween tween)
+    {
+        return tween != null && tween.IsActive() && tween.IsPlaying();
     }
 }

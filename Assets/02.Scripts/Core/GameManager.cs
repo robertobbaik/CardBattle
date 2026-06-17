@@ -29,6 +29,8 @@ public class GameManager : MonoBehaviour
     private bool _isAttackSelectionActive;
     private bool _battleEnded;
     private Coroutine _returnToLobbyCoroutine;
+    private Coroutine _waitCardSequencesCoroutine;
+    private Coroutine _startBattleCoroutine;
 
     private void Awake()
     {
@@ -90,8 +92,32 @@ public class GameManager : MonoBehaviour
 
     private void StartBattle()
     {
+        if (_startBattleCoroutine != null)
+        {
+            StopCoroutine(_startBattleCoroutine);
+        }
+
+        _startBattleCoroutine = StartCoroutine(StartBattleCoroutine());
+    }
+
+    private IEnumerator StartBattleCoroutine()
+    {
+        BeginSequenceState();
+
+        while (HasActiveBattlefieldCardSequences())
+        {
+            yield return null;
+        }
+
+        yield return ShowTurnTransition(TurnOwner.Player);
+
+        if (!_battleEnded && TurnManager.Instance != null)
+        {
+            TurnManager.Instance.StartPlayerTurn();
+        }
+
+        _startBattleCoroutine = null;
         EndSequenceState();
-        TurnManager.Instance.StartPlayerTurn();
     }
 
     public void OnClickBattleCard(BaseCard card)
@@ -320,6 +346,11 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        if (TurnManager.Instance.CurrentTurnOwner != TurnOwner.Enemy || TurnManager.Instance.IsTransitioningTurn)
+        {
+            return;
+        }
+
         if (!IsSequenceStateActive())
         {
             BeginSequenceState();
@@ -402,21 +433,18 @@ public class GameManager : MonoBehaviour
             attacker.Attack(target);
         }
 
-        if (CheckBattleResult())
+        StartWaitCardSequences(delegate
         {
-            return;
-        }
-
-        if (TurnManager.Instance != null)
-        {
-            TurnManager.Instance.EndTurn(delegate
+            if (CheckBattleResult())
             {
-                if (!_battleEnded)
-                {
-                    BeginEnemyActionSequence();
-                }
-            });
-        }
+                return;
+            }
+
+            if (TurnManager.Instance != null)
+            {
+                TurnManager.Instance.EndTurn();
+            }
+        });
     }
 
     private void ResolveEnemyAttackAfterLine(BaseCard attacker, BaseCard target, Action onComplete)
@@ -426,8 +454,47 @@ public class GameManager : MonoBehaviour
             attacker.Attack(target);
         }
 
-        CheckBattleResult();
+        StartWaitCardSequences(delegate
+        {
+            CheckBattleResult();
+            onComplete?.Invoke();
+        });
+    }
+
+    private void StartWaitCardSequences(Action onComplete)
+    {
+        if (_waitCardSequencesCoroutine != null)
+        {
+            StopCoroutine(_waitCardSequencesCoroutine);
+        }
+
+        _waitCardSequencesCoroutine = StartCoroutine(WaitCardSequencesCoroutine(onComplete));
+    }
+
+    private IEnumerator WaitCardSequencesCoroutine(Action onComplete)
+    {
+        while (HasActiveBattlefieldCardSequences())
+        {
+            yield return null;
+        }
+
+        _waitCardSequencesCoroutine = null;
         onComplete?.Invoke();
+    }
+
+    private bool HasActiveBattlefieldCardSequences()
+    {
+        if (PlayerController.Instance != null && PlayerController.Instance.HasActiveBattlefieldCardSequences())
+        {
+            return true;
+        }
+
+        if (EnemyController.Instance != null && EnemyController.Instance.HasActiveBattlefieldCardSequences())
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private static float GetAttackAngle(Vector3 fromPosition, Vector3 toPosition)
@@ -453,6 +520,18 @@ public class GameManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (_startBattleCoroutine != null)
+        {
+            StopCoroutine(_startBattleCoroutine);
+            _startBattleCoroutine = null;
+        }
+
+        if (_waitCardSequencesCoroutine != null)
+        {
+            StopCoroutine(_waitCardSequencesCoroutine);
+            _waitCardSequencesCoroutine = null;
+        }
+
         if (Instance == this)
         {
             Instance = null;

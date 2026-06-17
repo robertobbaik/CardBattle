@@ -135,7 +135,7 @@ public class InventoryScreen : BaseScreen
         _selectedCardData = cardData;
         _iconImage.sprite = DataManager.Instance.GetCardIcon(cardData.cardId);
         _nameText.text = DataManager.Instance.GetCardName(cardData.cardTextKey);
-        _descriptionText.text = DataManager.Instance.GetCardDescription(cardData.cardTextKey);
+        _descriptionText.text = DataManager.Instance.GetCardLogicDescription(cardData.cardTextKey);
     }
 
     private void SetEquipMode(bool isEquipMode)
