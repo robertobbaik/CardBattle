@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
     private static readonly Color AttackTargetHighlightColor = new Color(1f, 0f, 0f, 1f);
     private const float TurnPanelDuration = 2f;
     private const float GameOverReturnDelay = 3f;
+    private const float InitialRevealSideInterval = 0.8f;
 
     public static GameManager Instance { get; private set; }
 
@@ -31,6 +32,7 @@ public class GameManager : MonoBehaviour
     private Coroutine _returnToLobbyCoroutine;
     private Coroutine _waitCardSequencesCoroutine;
     private Coroutine _startBattleCoroutine;
+    private Coroutine _initialRevealSideIntervalCoroutine;
     private CardOwner _opponentRevealDebuffsSuppressedOwner = CardOwner.None;
     private List<BaseCard> _queuedInitialRevealEffectCards = new List<BaseCard>(3);
     private bool _isQueuingInitialRevealEffects;
@@ -105,15 +107,42 @@ public class GameManager : MonoBehaviour
         {
             EnemyController.Instance.CreateCards(delegate
             {
-                PlayerController.Instance.CreateCards(selectedCardIds, false, StartBattle);
+                StartSecondInitialRevealAfterInterval(delegate
+                {
+                    PlayerController.Instance.CreateCards(selectedCardIds, false, StartBattle);
+                });
             }, true);
             return;
         }
 
         PlayerController.Instance.CreateCards(selectedCardIds, true, delegate
         {
-            EnemyController.Instance.CreateCards(StartBattle, false);
+            StartSecondInitialRevealAfterInterval(delegate
+            {
+                EnemyController.Instance.CreateCards(StartBattle, false);
+            });
         });
+    }
+
+    private void StartSecondInitialRevealAfterInterval(Action startSecondReveal)
+    {
+        if (_initialRevealSideIntervalCoroutine != null)
+        {
+            StopCoroutine(_initialRevealSideIntervalCoroutine);
+        }
+
+        _initialRevealSideIntervalCoroutine = StartCoroutine(SecondInitialRevealIntervalCoroutine(startSecondReveal));
+    }
+
+    private IEnumerator SecondInitialRevealIntervalCoroutine(Action startSecondReveal)
+    {
+        if (InitialRevealSideInterval > 0f)
+        {
+            yield return new WaitForSeconds(InitialRevealSideInterval);
+        }
+
+        _initialRevealSideIntervalCoroutine = null;
+        startSecondReveal?.Invoke();
     }
 
     private void StartBattle()
@@ -625,6 +654,12 @@ public class GameManager : MonoBehaviour
         {
             StopCoroutine(_waitCardSequencesCoroutine);
             _waitCardSequencesCoroutine = null;
+        }
+
+        if (_initialRevealSideIntervalCoroutine != null)
+        {
+            StopCoroutine(_initialRevealSideIntervalCoroutine);
+            _initialRevealSideIntervalCoroutine = null;
         }
 
         if (Instance == this)
