@@ -16,31 +16,41 @@ public class BerserkerCard : BaseCard
             return;
         }
 
-        target.TakeDamage(GetAttackDamage(), this);
+        int attackDamage = Mathf.FloorToInt(Hp * 1.2f);
+        if (attackDamage < 1)
+        {
+            attackDamage = 1;
+        }
+
+        target.TakeDamage(attackDamage, this);
+        TakeSelfDamage();
         MarkAsActed();
     }
 
     public override void ReflectDamage(BaseCard target, int targetHpBeforeDamage)
-    {
-    }
-
-    public override bool CanUseSkill => true;
-
-    public override void UseSkill(BaseCard target = null)
     {
         if (target == null)
         {
             return;
         }
 
-        if (HasActedThisTurn)
+        TakeReflectDamage(targetHpBeforeDamage, target);
+    }
+
+    private void TakeSelfDamage()
+    {
+        if (!IsAlive)
         {
             return;
         }
 
-        target.TakeDamage(GetAttackDamage() + 2, this);
-        TakeDamage(1, this);
-        MarkAsActed();
+        int selfDamage = Mathf.FloorToInt(MaxHp * 0.2f);
+        if (selfDamage < 1)
+        {
+            selfDamage = 1;
+        }
+
+        TakeEffectDamage(selfDamage, this);
     }
 
 }

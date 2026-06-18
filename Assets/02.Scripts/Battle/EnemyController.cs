@@ -68,7 +68,7 @@ public class EnemyController : MonoBehaviour
         return randomDec;
     }
 
-    public void CreateCards(Action onComplete)
+    public void CreateCards(Action onComplete, bool suppressOpponentRevealDebuffs = false)
     {
         List<int> orderedDec = new List<int>(GetDec());
         ShuffleDec(orderedDec);
@@ -89,7 +89,7 @@ public class EnemyController : MonoBehaviour
             }
         }
 
-        StartOpenCards(onComplete);
+        StartOpenCards(onComplete, suppressOpponentRevealDebuffs);
     }
 
     private void ShuffleDec(List<int> dec)
@@ -370,23 +370,35 @@ public class EnemyController : MonoBehaviour
         return _cardParents[cardIndex] == null ? transform : _cardParents[cardIndex];
     }
 
-    private void StartOpenCards(Action onComplete)
+    private void StartOpenCards(Action onComplete, bool suppressOpponentRevealDebuffs)
     {
         if (_openCardsCoroutine != null)
         {
             StopCoroutine(_openCardsCoroutine);
         }
 
-        _openCardsCoroutine = StartCoroutine(OpenCards(onComplete));
+        _openCardsCoroutine = StartCoroutine(OpenCards(onComplete, suppressOpponentRevealDebuffs));
     }
 
-    private IEnumerator OpenCards(Action onComplete)
+    private IEnumerator OpenCards(Action onComplete, bool suppressOpponentRevealDebuffs)
     {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.SetOpponentRevealDebuffsSuppressed(CardOwner.Enemy, suppressOpponentRevealDebuffs);
+            GameManager.Instance.BeginInitialRevealEffectQueue();
+        }
+
         for (int i = 0; i < InitialOpenCardCount; i++)
         {
             BaseCard nextCard = _waitingCardQueue.Dequeue();
             nextCard.FlipToFront();
             yield return new WaitForSeconds(nextCard.FlipDuration);
+        }
+
+        if (GameManager.Instance != null)
+        {
+            yield return GameManager.Instance.FlushInitialRevealEffectQueue();
+            GameManager.Instance.SetOpponentRevealDebuffsSuppressed(CardOwner.Enemy, false);
         }
 
         _openCardsCoroutine = null;

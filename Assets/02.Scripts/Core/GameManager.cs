@@ -31,6 +31,10 @@ public class GameManager : MonoBehaviour
     private Coroutine _returnToLobbyCoroutine;
     private Coroutine _waitCardSequencesCoroutine;
     private Coroutine _startBattleCoroutine;
+    private CardOwner _opponentRevealDebuffsSuppressedOwner = CardOwner.None;
+    private List<BaseCard> _queuedInitialRevealEffectCards = new List<BaseCard>(3);
+    private bool _isQueuingInitialRevealEffects;
+    private TurnOwner _firstTurnOwner = TurnOwner.Player;
 
     private void Awake()
     {
@@ -53,6 +57,7 @@ public class GameManager : MonoBehaviour
         EnemyController.Instance.Initialize();
         TurnManager.Instance.Initialize();
         PlayerController.Instance.InitializeDec();
+        _firstTurnOwner = GetRandomFirstTurnOwner();
         BeginSequenceState();
 
         if (_startPanel == null)
@@ -62,7 +67,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        _startPanel.PlayStartSequence(OnStartSequenceComplete);
+        _startPanel.PlayStartSequence(_firstTurnOwner, OnStartSequenceComplete);
     }
 
     private void OnStartSequenceComplete()
@@ -85,9 +90,30 @@ public class GameManager : MonoBehaviour
     private void OnCardSelectionComplete(List<int> selectedCardIds)
     {
         _selectPanel.Hide();
-        PlayerController.Instance.CreateCards(selectedCardIds);
         BeginSequenceState();
-        EnemyController.Instance.CreateCards(StartBattle);
+        StartInitialCardReveal(selectedCardIds, _firstTurnOwner);
+    }
+
+    private TurnOwner GetRandomFirstTurnOwner()
+    {
+        return UnityEngine.Random.Range(0, 2) == 0 ? TurnOwner.Player : TurnOwner.Enemy;
+    }
+
+    private void StartInitialCardReveal(List<int> selectedCardIds, TurnOwner firstTurnOwner)
+    {
+        if (firstTurnOwner == TurnOwner.Enemy)
+        {
+            EnemyController.Instance.CreateCards(delegate
+            {
+                PlayerController.Instance.CreateCards(selectedCardIds, false, StartBattle);
+            }, true);
+            return;
+        }
+
+        PlayerController.Instance.CreateCards(selectedCardIds, true, delegate
+        {
+            EnemyController.Instance.CreateCards(StartBattle, false);
+        });
     }
 
     private void StartBattle()
@@ -109,11 +135,21 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
 
-        yield return ShowTurnTransition(TurnOwner.Player);
+        yield return ShowTurnTransition(_firstTurnOwner);
 
         if (!_battleEnded && TurnManager.Instance != null)
         {
-            TurnManager.Instance.StartPlayerTurn();
+            if (_firstTurnOwner == TurnOwner.Enemy)
+            {
+                TurnManager.Instance.StartEnemyTurn();
+                BeginEnemyActionSequence();
+                _startBattleCoroutine = null;
+                yield break;
+            }
+            else
+            {
+                TurnManager.Instance.StartPlayerTurn();
+            }
         }
 
         _startBattleCoroutine = null;
@@ -330,6 +366,65 @@ public class GameManager : MonoBehaviour
     public bool IsSequenceStateActive()
     {
         return _sequenceState == SequenceState.Sequence;
+    }
+
+    public void SetOpponentRevealDebuffsSuppressed(CardOwner owner, bool isSuppressed)
+    {
+        _opponentRevealDebuffsSuppressedOwner = isSuppressed ? owner : CardOwner.None;
+    }
+
+    public bool IsOpponentRevealDebuffSuppressed(CardOwner owner)
+    {
+        return _opponentRevealDebuffsSuppressedOwner == owner;
+    }
+
+    public void BeginInitialRevealEffectQueue()
+    {
+        _queuedInitialRevealEffectCards.Clear();
+        _isQueuingInitialRevealEffects = true;
+    }
+
+    public bool TryQueueInitialRevealEffect(BaseCard card)
+    {
+        if (!_isQueuingInitialRevealEffects)
+        {
+            return false;
+        }
+
+        if (card != null)
+        {
+            _queuedInitialRevealEffectCards.Add(card);
+        }
+
+        return true;
+    }
+
+    public IEnumerator FlushInitialRevealEffectQueue()
+    {
+        if (!_isQueuingInitialRevealEffects)
+        {
+            yield break;
+        }
+
+        _isQueuingInitialRevealEffects = false;
+
+        for (int i = 0; i < _queuedInitialRevealEffectCards.Count; i++)
+        {
+            BaseCard card = _queuedInitialRevealEffectCards[i];
+            if (card == null)
+            {
+                continue;
+            }
+
+            card.ResolveQueuedEnterFieldEffect();
+
+            while (HasActiveBattlefieldCardSequences())
+            {
+                yield return null;
+            }
+        }
+
+        _queuedInitialRevealEffectCards.Clear();
     }
 
     public IEnumerator ShowTurnTransition(TurnOwner turnOwner)

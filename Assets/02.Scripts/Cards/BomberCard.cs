@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class BomberCard : BaseCard
@@ -16,7 +17,7 @@ public class BomberCard : BaseCard
             return;
         }
 
-        target.TakeDamage(GetAttackDamage(), this);
+        ResolveBomberAttack(target);
         MarkAsActed();
     }
 
@@ -24,72 +25,41 @@ public class BomberCard : BaseCard
     {
     }
 
-    public override bool CanUseSkill => true;
-
-    public override void UseSkill(BaseCard target = null)
+    private void ResolveBomberAttack(BaseCard target)
     {
-        if (HasActedThisTurn)
+        List<BaseCard> enemyCards = GetEnemyBattlefieldCards();
+        int mainDamage = Mathf.FloorToInt(Hp * 0.5f);
+        int splashDamage = Mathf.FloorToInt(Hp * 0.3f);
+
+        mainDamage = Mathf.Max(1, mainDamage);
+        splashDamage = Mathf.Max(1, splashDamage);
+
+        target.TakeEffectDamage(mainDamage, this);
+
+        for (int i = 0; i < enemyCards.Count; i++)
         {
-            return;
-        }
-
-        ExplodeOnFieldCards();
-        MarkAsActed();
-    }
-
-    protected override void OnDeath(BaseCard killer)
-    {
-        if (killer == null)
-        {
-            return;
-        }
-
-        if (killer.Hp <= 0)
-        {
-            return;
-        }
-
-        killer.TakeDamage(2, this);
-    }
-
-    private void ExplodeOnFieldCards()
-    {
-        BaseCard[] fieldCards = GetFieldCards();
-        if (fieldCards == null || fieldCards.Length == 0)
-        {
-            return;
-        }
-
-        int explosionDamage = Mathf.FloorToInt(Hp * 0.5f);
-        if (explosionDamage < 1)
-        {
-            explosionDamage = 1;
-        }
-
-        for (int i = 0; i < fieldCards.Length; i++)
-        {
-            BaseCard card = fieldCards[i];
-            if (card == null || card == this || !card.IsAlive || !card.IsOpen)
+            BaseCard card = enemyCards[i];
+            if (card == null || card == target || !card.IsAlive || !card.IsOpen)
             {
                 continue;
             }
 
-            card.TakeDamage(explosionDamage, null);
+            card.TakeEffectDamage(splashDamage, this);
         }
     }
 
-    private BaseCard[] GetFieldCards()
+    private List<BaseCard> GetEnemyBattlefieldCards()
     {
-        if (Owner == CardOwner.Player && PlayerController.Instance != null)
+        if (Owner == CardOwner.Player && EnemyController.Instance != null)
         {
-            return PlayerController.Instance.Cards.ToArray();
+            return EnemyController.Instance.Cards;
         }
 
-        if (Owner == CardOwner.Enemy && EnemyController.Instance != null)
+        if (Owner == CardOwner.Enemy && PlayerController.Instance != null)
         {
-            return EnemyController.Instance.Cards.ToArray();
+            return PlayerController.Instance.Cards;
         }
 
-        return null;
+        return new List<BaseCard>();
     }
 }

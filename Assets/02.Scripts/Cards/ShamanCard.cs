@@ -17,13 +17,7 @@ public class ShamanCard : BaseCard
             return;
         }
 
-        int damage = GetAttackDamage() / 2;
-        if (damage < 1)
-        {
-            damage = 1;
-        }
-
-        target.TakeDamage(damage, this);
+        target.TakeDamage(GetAttackDamage(), this);
         MarkAsActed();
     }
 
@@ -37,10 +31,13 @@ public class ShamanCard : BaseCard
         TakeReflectDamage(targetHpBeforeDamage, target);
     }
 
-    public override bool CanUseSkill => true;
-
     protected override void OnEnterField()
     {
+        if (GameManager.Instance != null && GameManager.Instance.IsOpponentRevealDebuffSuppressed(Owner))
+        {
+            return;
+        }
+
         List<BaseCard> cards = GetEnemyBattlefieldCards();
         for (int i = 0; i < cards.Count; i++)
         {
@@ -50,24 +47,8 @@ public class ShamanCard : BaseCard
                 continue;
             }
 
-            card.ReduceHealth(2, this);
+            card.ReduceCurrentHealthAboveInitial(this);
         }
-    }
-
-    public override void UseSkill(BaseCard target = null)
-    {
-        if (target == null)
-        {
-            return;
-        }
-
-        if (HasActedThisTurn)
-        {
-            return;
-        }
-
-        target.ApplyWeaken();
-        MarkAsActed();
     }
 
     private List<BaseCard> GetEnemyBattlefieldCards()

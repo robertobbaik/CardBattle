@@ -30,7 +30,6 @@ public abstract class BaseCard : MonoBehaviour
     private int _currentHp;
     private int _initialHp;
     private int _slotIndex = -1;
-    private int _nextAttackModifier;
     private bool _hasActedThisTurn;
     private bool _isDestroying;
     private bool _hasEnteredField;
@@ -69,8 +68,6 @@ public abstract class BaseCard : MonoBehaviour
     public bool IsSequencePlaying => _isDestroying || _isOpening || IsTweenPlaying(_flipSequence) || IsTweenPlaying(_damageShakeSequence) || IsTweenPlaying(_destroyShakeSequence);
 
     public virtual bool CanAttack => _isAlive && _currentHp > 0 && !_hasActedThisTurn && !_isDestroying;
-
-    public virtual bool CanUseSkill => false;
 
     public abstract CardType CardType { get; }
 
@@ -140,10 +137,6 @@ public abstract class BaseCard : MonoBehaviour
     {
     }
 
-    public virtual void UseSkill(BaseCard target = null)
-    {
-    }
-
     public void Initialize()
     {
         CardData cardData = DataManager.Instance.CardDataById[cardId];
@@ -157,7 +150,6 @@ public abstract class BaseCard : MonoBehaviour
 
         _currentHp = startHp;
         _initialHp = startHp;
-        _nextAttackModifier = 0;
         _hasActedThisTurn = false;
         _isDestroying = false;
         _hasEnteredField = false;
@@ -175,15 +167,7 @@ public abstract class BaseCard : MonoBehaviour
 
     protected int GetAttackDamage()
     {
-        int attackDamage = _currentHp + _nextAttackModifier;
-        _nextAttackModifier = 0;
-
-        if (attackDamage < 1)
-        {
-            attackDamage = 1;
-        }
-
-        return attackDamage;
+        return Mathf.Max(1, _currentHp);
     }
 
     protected BaseCard GetRandomAdjacentEnemyCard(BaseCard target)
@@ -215,16 +199,6 @@ public abstract class BaseCard : MonoBehaviour
 
         return null;
     }
-    public void ApplyInspired()
-    {
-        _nextAttackModifier += 2;
-    }
-
-    public void ApplyWeaken()
-    {
-        _nextAttackModifier -= 2;
-    }
-
     public void SetHighlightActive(bool isActive)
     {
         if (_highlight == null)
@@ -310,15 +284,35 @@ public abstract class BaseCard : MonoBehaviour
         }
 
         _hasEnteredField = true;
+        if (GameManager.Instance != null && GameManager.Instance.TryQueueInitialRevealEffect(this))
+        {
+            return;
+        }
+
         OnEnterField();
     }
 
-    public void TakeDamage(int damage, BaseCard source = null)
+    public void ResolveQueuedEnterFieldEffect()
+    {
+        if (!_isAlive || !_isOpen)
+        {
+            return;
+        }
+
+        OnEnterField();
+    }
+
+    public void TakeDamage(int damage, BaseCard source)
     {
         ApplyDamage(damage, source, true);
     }
 
-    protected void TakeReflectDamage(int damage, BaseCard source = null)
+    public void TakeEffectDamage(int damage, BaseCard source)
+    {
+        ApplyDamage(damage, source, false);
+    }
+
+    protected void TakeReflectDamage(int damage, BaseCard source)
     {
         ApplyDamage(damage, source, false);
     }
@@ -330,7 +324,11 @@ public abstract class BaseCard : MonoBehaviour
             return;
         }
 
-        PlayHealFX();
+        if (_currentHp >= _initialHp)
+        {
+            return;
+        }
+
         _currentHp += amount;
 
         if (_currentHp > _initialHp)
@@ -338,6 +336,7 @@ public abstract class BaseCard : MonoBehaviour
             _currentHp = _initialHp;
         }
 
+        PlayHealFX();
         UpdateHpText();
     }
 
@@ -349,6 +348,17 @@ public abstract class BaseCard : MonoBehaviour
         }
 
         _initialHp += amount;
+        _currentHp += amount;
+        UpdateHpText();
+    }
+
+    public void AddCurrentHealth(int amount)
+    {
+        if (amount <= 0 || _isDestroying || !_isAlive)
+        {
+            return;
+        }
+
         _currentHp += amount;
         UpdateHpText();
     }
@@ -380,6 +390,50 @@ public abstract class BaseCard : MonoBehaviour
             return;
         }
 
+        PlayDamageShake();
+        PlayDamageFX();
+    }
+
+    public void ReduceBonusHealth(int amount, BaseCard source = null)
+    {
+        if (amount <= 0 || _isDestroying || !_isAlive)
+        {
+            return;
+        }
+
+        int bonusHealth = _initialHp - startHp;
+        if (bonusHealth <= 0)
+        {
+            return;
+        }
+
+        int reduction = Mathf.Min(amount, bonusHealth);
+        _initialHp -= reduction;
+
+        if (_currentHp > _initialHp)
+        {
+            _currentHp = _initialHp;
+        }
+
+        UpdateHpText();
+        PlayDamageShake();
+        PlayDamageFX();
+    }
+
+    public void ReduceCurrentHealthAboveInitial(BaseCard source = null)
+    {
+        if (_isDestroying || !_isAlive)
+        {
+            return;
+        }
+
+        if (_currentHp <= _initialHp)
+        {
+            return;
+        }
+
+        _currentHp = _initialHp;
+        UpdateHpText();
         PlayDamageShake();
         PlayDamageFX();
     }

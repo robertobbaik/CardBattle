@@ -41,28 +41,4 @@ public class AssassinCard : BaseCard
         TakeReflectDamage(reflectedDamage, target);
     }
 
-    public override bool CanUseSkill => true;
-
-    public override void UseSkill(BaseCard target = null)
-    {
-        if (target == null)
-        {
-            return;
-        }
-
-        if (HasActedThisTurn)
-        {
-            return;
-        }
-
-        int damage = GetAttackDamage();
-        if (target.Hp <= 3)
-        {
-            damage += 2;
-        }
-
-        target.TakeDamage(damage, this);
-        MarkAsActed();
-    }
-
 }

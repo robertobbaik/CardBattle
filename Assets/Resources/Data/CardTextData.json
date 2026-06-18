@@ -42,8 +42,8 @@
       "koreanDescription": "높은 체력으로 전열을 지키는 방어 카드입니다.",
       "englishName": "Guardian",
       "englishDescription": "A defensive card that protects the front line with high health.",
-      "koreanLogicDescription": "공격 피해는 현재 체력의 80%(최소 1)입니다. 스킬 사용 시 이번 턴 받는 피해를 1 줄이고, 반격 피해는 피해 전 체력의 120%입니다.",
-      "englishLogicDescription": "Attack deals 80% of current HP as damage, minimum 1. Skill reduces incoming damage by 1 this turn. Reflected damage is 120% of pre-hit HP."
+      "koreanLogicDescription": "공격 피해는 현재 체력의 80%(최소 1)입니다. 반격 피해는 피해 전 체력의 120%입니다.",
+      "englishLogicDescription": "Attack deals 80% of current HP as damage, minimum 1. Reflected damage is 120% of pre-hit HP."
     },
     {
       "cardTextKey": 6,
@@ -51,8 +51,8 @@
       "koreanDescription": "핵심 대상을 빠르게 제거하는 공격 카드입니다.",
       "englishName": "Assassin",
       "englishDescription": "An attack card that quickly removes priority targets.",
-      "koreanLogicDescription": "스킬은 현재 체력만큼 피해를 주며, 대상 체력이 3 이하이면 피해가 2 증가합니다. 대상이 생존하면 피해 전 체력의 150%만큼 반격 피해를 받습니다.",
-      "englishLogicDescription": "Skill deals current HP damage and adds 2 damage if the target has 3 HP or less. If the target survives, reflected damage is 150% of pre-hit HP."
+      "koreanLogicDescription": "공격 시 현재 체력만큼 피해를 줍니다. 대상이 생존하면 피해 전 체력의 150%만큼 반격 피해를 받습니다.",
+      "englishLogicDescription": "Attack deals current HP damage. If the target survives, reflected damage is 150% of pre-hit HP."
     },
     {
       "cardTextKey": 7,
@@ -60,8 +60,8 @@
       "koreanDescription": "피해를 감수하고 강하게 압박하는 카드입니다.",
       "englishName": "Berserker",
       "englishDescription": "A card that pressures enemies aggressively while taking risks.",
-      "koreanLogicDescription": "스킬은 현재 체력+2 피해를 주고 자신에게 1 피해를 줍니다. 공격 후 반격 피해를 받지 않습니다.",
-      "englishLogicDescription": "Skill deals current HP + 2 damage and deals 1 damage to itself. It takes no reflected damage after attacking."
+      "koreanLogicDescription": "공격 시 현재 체력의 120%(최소 1) 피해를 줍니다. 반격 피해는 정상적으로 받고, 공격 후 자신에게 최대 체력의 20%(최소 1) 피해를 줍니다.",
+      "englishLogicDescription": "Attack deals 120% of current HP, minimum 1. It takes reflected damage normally, then deals 20% of max HP, minimum 1, to itself after attacking."
     },
     {
       "cardTextKey": 8,
@@ -69,8 +69,8 @@
       "koreanDescription": "특수 효과로 전투 흐름을 바꾸는 카드입니다.",
       "englishName": "Shaman",
       "englishDescription": "A card that changes battle flow with special effects.",
-      "koreanLogicDescription": "공격 피해는 현재 체력의 절반(최소 1)입니다. 필드에 등장하면 열린 적 전체의 체력을 2 낮추고, 스킬은 대상의 다음 공격 피해를 2 낮춥니다.",
-      "englishLogicDescription": "Attack deals half current HP as damage, minimum 1. On entering the field, reduces all open enemies' health by 2. Skill lowers the target's next attack damage by 2."
+      "koreanLogicDescription": "공격 시 현재 체력만큼 피해를 주고, 반격 피해는 피해 전 체력만큼 받습니다. 필드에 등장하면 열린 적 전체의 현재 체력이 초기 체력을 초과한 만큼 모두 깎습니다.",
+      "englishLogicDescription": "Attack deals current HP damage and reflected damage equals pre-hit HP. On entering the field, removes all current HP above initial HP from all open enemies."
     },
     {
       "cardTextKey": 9,
@@ -78,8 +78,8 @@
       "koreanDescription": "아군의 전투 능력을 끌어올리는 카드입니다.",
       "englishName": "Commander",
       "englishDescription": "A card that improves allied combat performance.",
-      "koreanLogicDescription": "필드에 등장하면 열린 아군 전체의 체력을 2 올립니다. 스킬은 대상의 다음 공격 피해를 2 올리고, 반격 피해는 피해 전 체력만큼 받습니다.",
-      "englishLogicDescription": "On entering the field, adds 2 health to all open allies. Skill raises the target's next attack damage by 2. Reflected damage equals pre-hit HP."
+      "koreanLogicDescription": "필드에 등장하면 열린 아군 전체의 현재 체력을 2 올립니다. 반격 피해는 피해 전 체력만큼 받습니다.",
+      "englishLogicDescription": "On entering the field, adds 2 current HP to all open allies. Reflected damage equals pre-hit HP."
     },
     {
       "cardTextKey": 10,
@@ -87,8 +87,8 @@
       "koreanDescription": "폭발 피해로 적 진형을 무너뜨리는 카드입니다.",
       "englishName": "Bomber",
       "englishDescription": "A card that disrupts enemy formations with explosive damage.",
-      "koreanLogicDescription": "스킬은 자신과 같은 진영의 열린 생존 카드 전체에게 현재 체력의 50%(최소 1) 피해를 줍니다. 사망 시 처치자에게 2 피해를 줍니다.",
-      "englishLogicDescription": "Skill deals 50% of current HP, minimum 1, to all open living cards on its own side. On death, deals 2 damage to the killer."
+      "koreanLogicDescription": "공격 시 선택한 적에게 현재 체력의 50%(최소 1) 피해를 주고, 나머지 공개된 적들에게 현재 체력의 30%(최소 1) 피해를 줍니다. 반격 피해를 받지 않습니다.",
+      "englishLogicDescription": "Attack deals 50% of current HP, minimum 1, to the selected enemy and 30% of current HP, minimum 1, to each other open enemy. Takes no reflected damage."
     }
   ]
 }

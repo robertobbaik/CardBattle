@@ -40,7 +40,7 @@ public class PlayerController : MonoBehaviour
         _waitingCardQueue.Clear();
     }
 
-    public void CreateCards(List<int> selectedCardIds)
+    public void CreateCards(List<int> selectedCardIds, bool suppressOpponentRevealDebuffs = false, System.Action onComplete = null)
     {
         _cards.Clear();
         _waitingCardQueue.Clear();
@@ -58,7 +58,7 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        StartOpenCards();
+        StartOpenCards(suppressOpponentRevealDebuffs, onComplete);
     }
 
     public void OnTurnStart()
@@ -168,18 +168,24 @@ public class PlayerController : MonoBehaviour
         return _cardParents[cardIndex] == null ? transform : _cardParents[cardIndex];
     }
 
-    private void StartOpenCards()
+    private void StartOpenCards(bool suppressOpponentRevealDebuffs, System.Action onComplete)
     {
         if (_openCardsCoroutine != null)
         {
             StopCoroutine(_openCardsCoroutine);
         }
 
-        _openCardsCoroutine = StartCoroutine(OpenCards());
+        _openCardsCoroutine = StartCoroutine(OpenCards(suppressOpponentRevealDebuffs, onComplete));
     }
 
-    private IEnumerator OpenCards()
+    private IEnumerator OpenCards(bool suppressOpponentRevealDebuffs, System.Action onComplete)
     {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.SetOpponentRevealDebuffsSuppressed(CardOwner.Player, suppressOpponentRevealDebuffs);
+            GameManager.Instance.BeginInitialRevealEffectQueue();
+        }
+
         for (int i = 0; i < InitialOpenCardCount; i++)
         {
             BaseCard nextCard = _waitingCardQueue.Dequeue();
@@ -187,7 +193,14 @@ public class PlayerController : MonoBehaviour
             yield return new WaitForSeconds(nextCard.FlipDuration);
         }
 
+        if (GameManager.Instance != null)
+        {
+            yield return GameManager.Instance.FlushInitialRevealEffectQueue();
+            GameManager.Instance.SetOpponentRevealDebuffsSuppressed(CardOwner.Player, false);
+        }
+
         _openCardsCoroutine = null;
+        onComplete?.Invoke();
     }
 
     private void FillEmptySlot(BaseCard destroyedCard)

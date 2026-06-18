@@ -42,25 +42,4 @@ public class GuardianCard : BaseCard
         TakeReflectDamage(reflectedDamage, target);
     }
 
-    public override bool CanUseSkill => true;
-
-    public override void UseSkill(BaseCard target = null)
-    {
-        if (HasActedThisTurn)
-        {
-            return;
-        }
-
-        if (Owner == CardOwner.Player)
-        {
-            PlayerController.Instance?.ApplyGuard();
-        }
-        else if (Owner == CardOwner.Enemy)
-        {
-            EnemyController.Instance?.ApplyGuard();
-        }
-
-        MarkAsActed();
-    }
-
 }

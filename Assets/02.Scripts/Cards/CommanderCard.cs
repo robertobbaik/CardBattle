@@ -31,8 +31,6 @@ public class CommanderCard : BaseCard
         TakeReflectDamage(targetHpBeforeDamage, target);
     }
 
-    public override bool CanUseSkill => true;
-
     protected override void OnEnterField()
     {
         List<BaseCard> cards = GetAlliedBattlefieldCards();
@@ -44,24 +42,8 @@ public class CommanderCard : BaseCard
                 continue;
             }
 
-            card.AddHealth(2);
+            card.AddCurrentHealth(2);
         }
-    }
-
-    public override void UseSkill(BaseCard target = null)
-    {
-        if (target == null)
-        {
-            return;
-        }
-
-        if (HasActedThisTurn)
-        {
-            return;
-        }
-
-        target.ApplyInspired();
-        MarkAsActed();
     }
 
     private List<BaseCard> GetAlliedBattlefieldCards()

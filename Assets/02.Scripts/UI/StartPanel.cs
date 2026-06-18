@@ -9,13 +9,15 @@ public class StartPanel : MonoBehaviour
 
     [SerializeField] private List<Image> _myDeckIcons = new List<Image>();
     [SerializeField] private List<Image> _opponentDeckIcons = new List<Image>();
+    [SerializeField] private Image _playerFirstTurnImage;
+    [SerializeField] private Image _enemyFirstTurnImage;
     [SerializeField] private Animator _animator;
     [SerializeField] private float _animationDelay = 2f;
 
     private Action _startSequenceCompleteCallback;
     private bool _isPlayingStartSequence;
 
-    public void PlayStartSequence(Action onComplete)
+    public void PlayStartSequence(TurnOwner firstTurnOwner, Action onComplete)
     {
         gameObject.SetActive(true);
 
@@ -24,6 +26,7 @@ public class StartPanel : MonoBehaviour
 
         SetDeckIcons(_myDeckIcons, UserInfoManager.Instance.CurrentDec);
         SetDeckIcons(_opponentDeckIcons, EnemyController.Instance.GetDec());
+        SetFirstTurnImage(firstTurnOwner);
 
         if (_animationDelay > 0f)
         {
@@ -73,6 +76,22 @@ public class StartPanel : MonoBehaviour
         }
     }
 
+    private void SetFirstTurnImage(TurnOwner firstTurnOwner)
+    {
+        SetImageActive(_playerFirstTurnImage, firstTurnOwner == TurnOwner.Player);
+        SetImageActive(_enemyFirstTurnImage, firstTurnOwner == TurnOwner.Enemy);
+    }
+
+    private void SetImageActive(Image image, bool isActive)
+    {
+        if (image == null)
+        {
+            return;
+        }
+
+        image.gameObject.SetActive(isActive);
+    }
+
     private void CompleteStartSequence()
     {
         if (!_isPlayingStartSequence)
@@ -87,6 +106,7 @@ public class StartPanel : MonoBehaviour
         _startSequenceCompleteCallback = null;
 
         gameObject.SetActive(false);
+        SetFirstTurnImage(TurnOwner.None);
         completeCallback?.Invoke();
     }
 }

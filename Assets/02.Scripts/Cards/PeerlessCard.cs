@@ -37,24 +37,6 @@ public class PeerlessCard : BaseCard
         TakeReflectDamage(reflectedDamage, target);
     }
 
-    public override bool CanUseSkill => true;
-
-    public override void UseSkill(BaseCard target = null)
-    {
-        if (target == null)
-        {
-            return;
-        }
-
-        if (HasActedThisTurn)
-        {
-            return;
-        }
-
-        ResolvePeerlessHit(target, GetAttackDamage());
-        MarkAsActed();
-    }
-
     private void ResolvePeerlessHit(BaseCard target, int mainDamage)
     {
         if (target == null)
@@ -76,7 +58,7 @@ public class PeerlessCard : BaseCard
             return;
         }
 
-        adjacentCard.TakeDamage(splashDamage, null);
+        adjacentCard.TakeEffectDamage(splashDamage, this);
     }
 
     private BaseCard GetRandomOpenAdjacentEnemyCard(BaseCard target)
