@@ -11,18 +11,24 @@ public class FXManager : MonoBehaviour
     private const string LiningFxName = "FX - Lining";
     private const string DoubleSlashFxName = "FX - DoubleSlash";
     private const string DestroyFxName = "FX - Destroy";
+    private const string ShieldFxName = "FX - Shield";
+    private const string DebuffFxName = "FX - Debuff";
 
     private GameObject _damageFxPrefab;
     private GameObject _healFxPrefab;
     private GameObject _liningFxPrefab;
     private GameObject _doubleSlashFxPrefab;
     private GameObject _destroyFxPrefab;
+    private GameObject _shieldFxPrefab;
+    private GameObject _debuffFxPrefab;
 
     private readonly Queue<FX> _damagePool = new Queue<FX>();
     private readonly Queue<FX> _healPool = new Queue<FX>();
     private readonly Queue<FX> _liningPool = new Queue<FX>();
     private readonly Queue<FX> _doubleSlashPool = new Queue<FX>();
     private readonly Queue<FX> _destroyPool = new Queue<FX>();
+    private readonly Queue<FX> _shieldPool = new Queue<FX>();
+    private readonly Queue<FX> _debuffPool = new Queue<FX>();
 
     private void Awake()
     {
@@ -69,6 +75,16 @@ public class FXManager : MonoBehaviour
         return PlayLocal(_destroyFxPrefab, _destroyPool, FXKind.Destroy, parent, localPosition, Quaternion.identity, onComplete);
     }
 
+    public FX PlayShieldFX(Transform parent, Vector3 localPosition)
+    {
+        return PlayLocal(_shieldFxPrefab, _shieldPool, FXKind.Shield, parent, localPosition, Quaternion.identity, null);
+    }
+
+    public FX PlayDebuffFX(Transform parent, Vector3 localPosition)
+    {
+        return PlayLocal(_debuffFxPrefab, _debuffPool, FXKind.Debuff, parent, localPosition, Quaternion.identity, null);
+    }
+
     public void Recycle(FX fx, FXKind kind)
     {
         if (fx == null)
@@ -96,6 +112,12 @@ public class FXManager : MonoBehaviour
             case FXKind.Destroy:
                 _destroyPool.Enqueue(fx);
                 return;
+            case FXKind.Shield:
+                _shieldPool.Enqueue(fx);
+                return;
+            case FXKind.Debuff:
+                _debuffPool.Enqueue(fx);
+                return;
         }
     }
 
@@ -106,6 +128,8 @@ public class FXManager : MonoBehaviour
         _liningFxPrefab = LoadPrefab(LiningFxName);
         _doubleSlashFxPrefab = LoadPrefab(DoubleSlashFxName);
         _destroyFxPrefab = LoadPrefab(DestroyFxName);
+        _shieldFxPrefab = LoadPrefab(ShieldFxName);
+        _debuffFxPrefab = LoadPrefab(DebuffFxName);
     }
 
     private GameObject LoadPrefab(string resourceName)

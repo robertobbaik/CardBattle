@@ -48,7 +48,18 @@ public class ShamanCard : BaseCard
             }
 
             card.ReduceCurrentHealthAboveInitial(this);
+            PlayDebuffFX(card);
         }
+    }
+
+    private void PlayDebuffFX(BaseCard target)
+    {
+        if (target == null || FXManager.Instance == null)
+        {
+            return;
+        }
+
+        FXManager.Instance.PlayDebuffFX(target.transform, Vector3.zero);
     }
 
     private List<BaseCard> GetEnemyBattlefieldCards()

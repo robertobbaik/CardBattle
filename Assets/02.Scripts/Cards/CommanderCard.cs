@@ -43,7 +43,18 @@ public class CommanderCard : BaseCard
             }
 
             card.AddCurrentHealth(2);
+            PlayShieldFX(card);
         }
+    }
+
+    private void PlayShieldFX(BaseCard target)
+    {
+        if (target == null || FXManager.Instance == null)
+        {
+            return;
+        }
+
+        FXManager.Instance.PlayShieldFX(target.transform, Vector3.zero);
     }
 
     private List<BaseCard> GetAlliedBattlefieldCards()
