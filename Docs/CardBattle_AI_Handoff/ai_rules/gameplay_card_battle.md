@@ -98,17 +98,19 @@ Enemy turn:
 
 ## AI Rules
 
-MVP AI:
+Current Enemy AI:
 
-- Select a random alive attacker.
-- Select a random alive target.
-- Use the selected card's default attack.
-
-Improved AI, if time allows:
-
+- Build all possible attacker and target pairs from alive, open, attack-capable enemy cards and alive, open player cards.
+- Score every possible action pair, then execute one of the highest-scoring pairs.
+- If multiple action pairs have the same best score, choose randomly among those tied best actions.
 - Prioritize targets that can be killed.
-- Prefer Peerless targets with adjacent enemies.
-- Avoid suicidal Normal attacks when a safer Ranged card is available.
+- Prefer lower HP targets.
+- Prefer removing support or control cards first: Healer, Commander, and Shaman.
+- Treat Assassin, Peerless, and Bomber as high-threat targets.
+- Prefer using Ranged attackers because they do not receive reflected damage.
+- Avoid choices with high expected reflected damage when a safer useful action is available.
+- Account for Berserker self-damage when choosing an attacker.
+- Give extra value to Peerless and Bomber attacks when their splash damage can hit additional cards.
 
 ## Balance Rule
 

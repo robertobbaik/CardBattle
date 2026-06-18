@@ -11,6 +11,7 @@ public class EnemyController : MonoBehaviour
     public static EnemyController Instance { get; private set; }
 
     [SerializeField] private List<Transform> _cardParents = new List<Transform>(EnemyDecCardCount);
+    [SerializeField] private bool _logAiDecision;
 
     private EnemyState _currentState = EnemyState.None;
     private List<int> _currentDec = new List<int>(EnemyDecCardCount);
@@ -19,6 +20,14 @@ public class EnemyController : MonoBehaviour
     private Coroutine _openCardsCoroutine;
     private Coroutine _actionSequenceCoroutine;
     private int _guardDamageReduction;
+
+    private struct EnemyActionPlan
+    {
+        public BaseCard Attacker;
+        public BaseCard Target;
+        public int Score;
+        public bool IsValid;
+    }
 
     public EnemyState CurrentState => _currentState;
     public List<BaseCard> Cards => _cards;
@@ -267,8 +276,9 @@ public class EnemyController : MonoBehaviour
 
         ChangeState(EnemyState.Act);
 
-        BaseCard attacker = GetActionCard();
-        BaseCard target = GetPlayerTargetCard();
+        EnemyActionPlan actionPlan = GetBestActionPlan();
+        BaseCard attacker = actionPlan.IsValid ? actionPlan.Attacker : null;
+        BaseCard target = actionPlan.IsValid ? actionPlan.Target : null;
 
         if (attacker != null && target != null)
         {
@@ -299,38 +309,294 @@ public class EnemyController : MonoBehaviour
         onComplete?.Invoke();
     }
 
-    private BaseCard GetActionCard()
-    {
-        for (int i = 0; i < _cards.Count; i++)
-        {
-            BaseCard card = _cards[i];
-            if (card != null && card.IsAlive && card.IsOpen)
-            {
-                return card;
-            }
-        }
-
-        return null;
-    }
-
-    private BaseCard GetPlayerTargetCard()
+    private EnemyActionPlan GetBestActionPlan()
     {
         if (PlayerController.Instance == null)
         {
-            return null;
+            return default;
         }
 
         List<BaseCard> playerCards = PlayerController.Instance.Cards;
-        for (int i = 0; i < playerCards.Count; i++)
+        EnemyActionPlan selectedPlan = default;
+        int bestScore = int.MinValue;
+        int bestScoreTieCount = 0;
+
+        for (int attackerIndex = 0; attackerIndex < _cards.Count; attackerIndex++)
         {
-            BaseCard card = playerCards[i];
-            if (card != null && card.IsAlive && card.IsOpen)
+            BaseCard attacker = _cards[attackerIndex];
+            if (attacker == null || !attacker.IsAlive || !attacker.IsOpen || !attacker.CanAttack)
             {
-                return card;
+                continue;
+            }
+
+            for (int targetIndex = 0; targetIndex < playerCards.Count; targetIndex++)
+            {
+                BaseCard target = playerCards[targetIndex];
+                if (target == null || !target.IsAlive || !target.IsOpen)
+                {
+                    continue;
+                }
+
+                int score = EvaluateActionScore(attacker, target);
+
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    bestScoreTieCount = 1;
+                    selectedPlan = CreateActionPlan(attacker, target, score);
+                    continue;
+                }
+
+                if (score == bestScore)
+                {
+                    bestScoreTieCount++;
+                    if (UnityEngine.Random.Range(0, bestScoreTieCount) == 0)
+                    {
+                        selectedPlan = CreateActionPlan(attacker, target, score);
+                    }
+                }
             }
         }
 
-        return null;
+        if (selectedPlan.IsValid && _logAiDecision)
+        {
+            Debug.Log(string.Format("Enemy AI Action - attacker: {0}, target: {1}, score: {2}", GetCardLabel(selectedPlan.Attacker), GetCardLabel(selectedPlan.Target), selectedPlan.Score));
+        }
+
+        return selectedPlan;
+    }
+
+    private EnemyActionPlan CreateActionPlan(BaseCard attacker, BaseCard target, int score)
+    {
+        return new EnemyActionPlan
+        {
+            Attacker = attacker,
+            Target = target,
+            Score = score,
+            IsValid = true
+        };
+    }
+
+    private int EvaluateActionScore(BaseCard attacker, BaseCard target)
+    {
+        int attackDamage = EstimateAttackDamage(attacker);
+        int reflectedDamage = EstimateReflectedDamage(attacker, target, attackDamage);
+        int selfDamage = EstimateSelfDamage(attacker);
+        int targetPriority = GetTargetPriority(target);
+        int attackerPriority = GetAttackerPriority(attacker);
+        int splashValue = EstimateSplashValue(attacker, target, attackDamage);
+        bool canKillTarget = attackDamage >= target.Hp;
+        bool attackerLikelyDies = attacker.Hp <= reflectedDamage + selfDamage;
+
+        int score = 0;
+        score += canKillTarget ? 10000 : 0;
+        score += targetPriority * 100;
+        score += attackerPriority * 100;
+        score += Mathf.Max(0, 100 - target.Hp) * 50;
+        score += splashValue * 35;
+        score -= reflectedDamage * 80;
+        score -= selfDamage * 50;
+        score -= attackerLikelyDies ? 2500 : 0;
+        score += Mathf.Max(0, attackDamage - target.Hp) * 20;
+
+        return score;
+    }
+
+    private int EstimateAttackDamage(BaseCard attacker)
+    {
+        if (attacker == null)
+        {
+            return 0;
+        }
+
+        switch (attacker.CardType)
+        {
+            case CardType.Guardian:
+                return Mathf.Max(1, Mathf.FloorToInt(attacker.Hp * 0.8f));
+            case CardType.Berserker:
+                return Mathf.Max(1, Mathf.FloorToInt(attacker.Hp * 1.2f));
+            case CardType.Bomber:
+                return Mathf.Max(1, Mathf.FloorToInt(attacker.Hp * 0.5f));
+            default:
+                return Mathf.Max(1, attacker.Hp);
+        }
+    }
+
+    private int EstimateReflectedDamage(BaseCard attacker, BaseCard target, int attackDamage)
+    {
+        if (attacker == null || target == null)
+        {
+            return 0;
+        }
+
+        if (attacker.CardType == CardType.Ranged || attacker.CardType == CardType.Bomber)
+        {
+            return 0;
+        }
+
+        if (target.Hp - attackDamage <= 0 && attacker.CardType == CardType.Assassin)
+        {
+            return 0;
+        }
+
+        switch (attacker.CardType)
+        {
+            case CardType.Assassin:
+                return Mathf.FloorToInt(target.Hp * 1.5f);
+            case CardType.Guardian:
+            case CardType.Peerless:
+                return Mathf.FloorToInt(target.Hp * 1.2f);
+            default:
+                return target.Hp;
+        }
+    }
+
+    private int EstimateSelfDamage(BaseCard attacker)
+    {
+        if (attacker == null || attacker.CardType != CardType.Berserker)
+        {
+            return 0;
+        }
+
+        return Mathf.Max(1, Mathf.FloorToInt(attacker.MaxHp * 0.2f));
+    }
+
+    private int GetTargetPriority(BaseCard target)
+    {
+        if (target == null)
+        {
+            return 0;
+        }
+
+        switch (target.CardType)
+        {
+            case CardType.Healer:
+            case CardType.Commander:
+            case CardType.Shaman:
+                return 5;
+            case CardType.Assassin:
+            case CardType.Peerless:
+            case CardType.Bomber:
+                return 4;
+            case CardType.Berserker:
+            case CardType.Ranged:
+                return 3;
+            case CardType.Guardian:
+                return 2;
+            default:
+                return 1;
+        }
+    }
+
+    private int GetAttackerPriority(BaseCard attacker)
+    {
+        if (attacker == null)
+        {
+            return 0;
+        }
+
+        switch (attacker.CardType)
+        {
+            case CardType.Ranged:
+                return 6;
+            case CardType.Bomber:
+                return 4;
+            case CardType.Peerless:
+                return 3;
+            default:
+                return 0;
+        }
+    }
+
+    private int EstimateSplashValue(BaseCard attacker, BaseCard target, int attackDamage)
+    {
+        if (attacker == null || target == null || PlayerController.Instance == null)
+        {
+            return 0;
+        }
+
+        if (attacker.CardType == CardType.Bomber)
+        {
+            int splashDamage = Mathf.Max(1, Mathf.FloorToInt(attacker.Hp * 0.3f));
+            return CountDamagedCards(PlayerController.Instance.Cards, target, splashDamage) * splashDamage;
+        }
+
+        if (attacker.CardType == CardType.Peerless)
+        {
+            int splashDamage = Mathf.FloorToInt(attackDamage * 0.5f);
+            if (splashDamage <= 0)
+            {
+                return 0;
+            }
+
+            return CountAdjacentAliveCards(PlayerController.Instance.Cards, target.SlotIndex) * splashDamage;
+        }
+
+        return 0;
+    }
+
+    private int CountDamagedCards(List<BaseCard> cards, BaseCard excludedCard, int damage)
+    {
+        if (cards == null || damage <= 0)
+        {
+            return 0;
+        }
+
+        int count = 0;
+        for (int i = 0; i < cards.Count; i++)
+        {
+            BaseCard card = cards[i];
+            if (card == null || card == excludedCard || !card.IsAlive || !card.IsOpen)
+            {
+                continue;
+            }
+
+            count++;
+        }
+
+        return count;
+    }
+
+    private int CountAdjacentAliveCards(List<BaseCard> cards, int slotIndex)
+    {
+        if (cards == null)
+        {
+            return 0;
+        }
+
+        int count = 0;
+        if (IsAliveOpenCardAt(cards, slotIndex - 1))
+        {
+            count++;
+        }
+
+        if (IsAliveOpenCardAt(cards, slotIndex + 1))
+        {
+            count++;
+        }
+
+        return count;
+    }
+
+    private bool IsAliveOpenCardAt(List<BaseCard> cards, int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= cards.Count)
+        {
+            return false;
+        }
+
+        BaseCard card = cards[slotIndex];
+        return card != null && card.IsAlive && card.IsOpen;
+    }
+
+    private string GetCardLabel(BaseCard card)
+    {
+        if (card == null)
+        {
+            return "None";
+        }
+
+        return string.Format("{0}[Slot:{1}, HP:{2}, Type:{3}]", string.IsNullOrEmpty(card.cardName) ? card.name : card.cardName, card.SlotIndex, card.Hp, card.CardType);
     }
 
     private BaseCard CreateCard(int cardId, int cardIndex)
