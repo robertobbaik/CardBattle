@@ -2,18 +2,18 @@
   "items": [
     {
       "cardTextKey": 1,
-      "koreanName": "일반 병사",
+      "koreanName": "보병",
       "koreanDescription": "기본 능력치를 가진 표준 카드입니다.",
-      "englishName": "Normal Soldier",
+      "englishName": "Infantry",
       "englishDescription": "A standard card with balanced stats.",
       "koreanLogicDescription": "공격 시 현재 체력만큼 피해를 주며, 공격받으면 피해 전 체력만큼 반격 피해를 받습니다.",
       "englishLogicDescription": "Deals damage equal to current HP when attacking. When attacked, takes reflected damage equal to pre-hit HP."
     },
     {
       "cardTextKey": 2,
-      "koreanName": "원거리 병사",
+      "koreanName": "궁수",
       "koreanDescription": "후방에서 안정적으로 공격하는 카드입니다.",
-      "englishName": "Ranged Soldier",
+      "englishName": "Archer",
       "englishDescription": "A card that attacks reliably from the back line.",
       "koreanLogicDescription": "공격 시 현재 체력만큼 피해를 주고, 공격 후 반격 피해를 받지 않습니다.",
       "englishLogicDescription": "Deals damage equal to current HP when attacking and takes no reflected damage after the attack."

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Shop icon</title>
+  <desc id="desc">A shop button icon with a storefront and Shop label.</desc>
+  <defs>
+    <linearGradient id="bg" x1="92" y1="58" x2="420" y2="454" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#B65D52"/>
+      <stop offset="1" stop-color="#315E69"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#321B1A" flood-opacity=".28"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="72" fill="url(#bg)"/>
+  <circle cx="400" cy="112" r="62" fill="#F4C95D" opacity=".18"/>
+  <circle cx="122" cy="390" r="72" fill="#7DD8C6" opacity=".12"/>
+  <g filter="url(#shadow)">
+    <path d="M153 220h206v132a28 28 0 0 1-28 28H181a28 28 0 0 1-28-28V220Z" fill="#F7FBF8"/>
+    <path d="M174 151h164l36 75H138l36-75Z" fill="#F4C95D"/>
+    <path d="M138 226h236" stroke="#273D63" stroke-width="16" stroke-linecap="round" opacity=".22"/>
+    <path d="M160 226c0 23 18 41 41 41s41-18 41-41M242 226c0 23 18 41 41 41s41-18 41-41M324 226c0 23 18 41 41 41" fill="none" stroke="#B65D52" stroke-width="18" stroke-linecap="round"/>
+    <rect x="211" y="288" width="90" height="92" rx="12" fill="#315E69"/>
+    <path d="M318 318h28" stroke="#F4C95D" stroke-width="14" stroke-linecap="round"/>
+  </g>
+  <text x="256" y="449" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="58" font-weight="800" letter-spacing="0" fill="#FFFFFF">Shop</text>
+</svg>

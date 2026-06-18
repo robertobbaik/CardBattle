@@ -58,7 +58,7 @@ For example, `BattleManager`, `BoardManager`, `PlayerInputController`, and `Enem
 - Canvas
 - Player card slot parent
 - Enemy card slot parent
-- Action buttons
+- Attack button
 - Turn text
 - Result panel
 
@@ -87,10 +87,11 @@ Priority UI elements:
 1. Enemy cards
 2. Turn/status text
 3. Player cards
-4. Attack/skill buttons
+4. Attack button
 5. Result panel
 
 The player must always understand the current required action.
+Do not add a manual skill button. Card-specific abilities are automatic reveal or turn-start effects.
 
 ## Art Rules
 

@@ -37,6 +37,7 @@ public class EnemyController : MonoBehaviour
 
     public void Initialize()
     {
+        _currentDec.Clear();
         ChangeState(EnemyState.Idle);
     }
 
@@ -44,10 +45,27 @@ public class EnemyController : MonoBehaviour
     {
         if (_currentDec == null || _currentDec.Count == 0)
         {
-            _currentDec = new List<int>(UserInfoManager.Instance.CurrentDec);
+            _currentDec = CreateRandomDec();
         }
 
         return _currentDec;
+    }
+
+    private List<int> CreateRandomDec()
+    {
+        List<int> cardIds = new List<int>(DataManager.Instance.CardDataById.Keys);
+        ShuffleDec(cardIds);
+
+        int decCount = Mathf.Min(EnemyDecCardCount, cardIds.Count);
+        List<int> randomDec = cardIds.GetRange(0, decCount);
+
+        if (randomDec.Count < EnemyDecCardCount)
+        {
+            Debug.LogWarning(string.Format("Enemy Dec has only {0} cards because card data is smaller than required count {1}.", randomDec.Count, EnemyDecCardCount));
+        }
+
+        Debug.Log(string.Format("Enemy Dec Generated - {0}", string.Join(",", randomDec)));
+        return randomDec;
     }
 
     public void CreateCards(Action onComplete)

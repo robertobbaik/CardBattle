@@ -15,29 +15,54 @@ Treat this document as the gameplay-specific rule file for the card battle proje
 - The player wins when all enemy cards are removed.
 - The player loses when all player cards are removed.
 
+## Deck Setup Rules
+
+- The player deck must be loaded from `UserInfoManager`.
+- Do not generate the player deck from the enemy random deck generator.
+- Do not reuse the same deck instance or same selected card list for both sides.
+- The enemy deck must be generated from the full available card pool.
+- Shuffle all available card definitions, then take cards until the enemy battle deck is full.
+- The enemy deck must not contain duplicate cards in a single battle.
+- If the available card pool is smaller than the required enemy deck size, use every available card once and log a setup warning.
+- The first 3 enemy cards become battlefield cards.
+- The remaining enemy cards become standby cards in shuffled order.
+
 ## Turn Flow
 
 Player turn:
 
-1. Select friendly card.
-2. Select attack or skill.
-3. Select valid target.
-4. Apply effect.
-5. Remove dead cards.
-6. Refill empty slots.
-7. Check win/lose.
-8. End turn.
+1. Trigger automatic turn-start effects for revealed friendly cards.
+2. Select friendly card.
+3. Select attack.
+4. Select valid target.
+5. Apply effect.
+6. Remove dead cards.
+7. Refill empty slots.
+8. Reveal refilled cards and trigger automatic reveal effects.
+9. Check win/lose.
+10. End turn.
 
 Enemy turn:
 
-1. AI selects attacker.
-2. AI selects action.
+1. Trigger automatic turn-start effects for revealed enemy cards.
+2. AI selects attacker.
 3. AI selects target.
-4. Apply effect.
+4. Apply default attack.
 5. Remove dead cards.
 6. Refill empty slots.
-7. Check win/lose.
-8. Return to player turn.
+7. Reveal refilled cards and trigger automatic reveal effects.
+8. Check win/lose.
+9. Return to player turn.
+
+## Card Skill Policy
+
+- Cards do not have active skills.
+- Do not implement a manual skill button, manual skill target selection, or player-selected `UseSkill` flow.
+- Card-specific abilities must be automatic.
+- Automatic abilities may trigger only when a card is revealed or at the start of that card owner's turn.
+- Reveal effects trigger once when a standby card enters the battlefield and is flipped face-up.
+- Turn-start effects trigger only for alive, revealed battlefield cards.
+- Automatic abilities do not consume the player's manual action for the turn.
 
 ## Card Types
 
@@ -61,6 +86,7 @@ Enemy turn:
 
 - At the start of its owner's turn, heals allied cards by 1 HP.
 - The healer does not heal itself.
+- Healing cannot increase a card's HP above its maximum HP.
 - Its attack behaves like a Normal card.
 
 ## Targeting Rules
@@ -76,7 +102,7 @@ MVP AI:
 
 - Select a random alive attacker.
 - Select a random alive target.
-- Use the selected card's default action.
+- Use the selected card's default attack.
 
 Improved AI, if time allows:
 
