@@ -3,6 +3,7 @@
 모바일 판타지 카드 배틀 게임 프로젝트입니다. 플레이어가 보유 덱에서 전투에 사용할 카드를 선택하고, 상대 AI와 턴제로 전투를 진행합니다.
 
 동영상 주소 : https://youtu.be/5CchH0N-6kU
+Git Hub : https://github.com/robertobbaik/CardBattle
 
 ## 사용한 Unity 버전
 
